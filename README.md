@@ -1,19 +1,15 @@
-# Ajax select / child select package for Laravel Nova.
+# NovaAjaxSelect
 
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/gabrielesbaiz/nova-ajax-select.svg?style=flat-square)](https://packagist.org/packages/gabrielesbaiz/nova-ajax-select)
-[![GitHub Tests Action Status](https://img.shields.io/github/actions/workflow/status/gabrielesbaiz/nova-ajax-select/run-tests.yml?branch=main&label=tests&style=flat-square)](https://github.com/gabrielesbaiz/nova-ajax-select/actions?query=workflow%3Arun-tests+branch%3Amain)
-[![GitHub Code Style Action Status](https://img.shields.io/github/actions/workflow/status/gabrielesbaiz/nova-ajax-select/fix-php-code-style-issues.yml?branch=main&label=code%20style&style=flat-square)](https://github.com/gabrielesbaiz/nova-ajax-select/actions?query=workflow%3A"Fix+PHP+code+style+issues"+branch%3Amain)
 [![Total Downloads](https://img.shields.io/packagist/dt/gabrielesbaiz/nova-ajax-select.svg?style=flat-square)](https://packagist.org/packages/gabrielesbaiz/nova-ajax-select)
 
-This is where your description should go. Limit it to a paragraph or two. Consider adding a small example.
+Ajax select / child select package for Laravel Nova.
 
-## Support us
+Original code from [alexwenzel/nova-ajax-select](https://github.com/alexwenzel/nova-ajax-select)
 
-[<img src="https://github-ads.s3.eu-central-1.amazonaws.com/nova-ajax-select.jpg?t=1" width="419px" />](https://spatie.be/github-ad-click/nova-ajax-select)
+## Features
 
-We invest a lot of resources into creating [best in class open source packages](https://spatie.be/open-source). You can support us by [buying one of our paid products](https://spatie.be/open-source/support-us).
-
-We highly appreciate you sending us a postcard from your hometown, mentioning which of our package(s) you are using. You'll find our address on [our contact page](https://spatie.be/about-us). We publish all received postcards on [our virtual postcard wall](https://spatie.be/open-source/postcards).
+- ✅ Ajax populated select fields based on the values of other fields and when they change
 
 ## Installation
 
@@ -23,37 +19,85 @@ You can install the package via composer:
 composer require gabrielesbaiz/nova-ajax-select
 ```
 
-You can publish and run the migrations with:
-
-```bash
-php artisan vendor:publish --tag="nova-ajax-select-migrations"
-php artisan migrate
-```
-
-You can publish the config file with:
-
-```bash
-php artisan vendor:publish --tag="nova-ajax-select-config"
-```
-
-This is the contents of the published config file:
-
-```php
-return [
-];
-```
-
-Optionally, you can publish the views using
-
-```bash
-php artisan vendor:publish --tag="nova-ajax-select-views"
-```
-
 ## Usage
 
 ```php
 $novaAjaxSelect = new Gabrielesbaiz\NovaAjaxSelect();
 echo $novaAjaxSelect->echoPhrase('Hello, Gabrielesbaiz!');
+```
+
+Specify a request url & optionally the `parent($attribute)` to watch & trigger the ajax select:
+
+```php
+use Gabrielesbaiz\NovaAjaxSelect\NovaAjaxSelect;;
+```
+
+```php
+BelongsTo::make('Company'),
+
+NovaAjaxSelect::make('User')
+    ->get('/api/company/{company}/users')
+    ->parent('company'),
+```
+
+Add the field for index & detail views display. NovaAjaxSelect is for forms only
+
+```php
+BelongsTo::make('User')->exceptOnForms(),
+```
+
+### Request Url:
+
+In the above example, we say `company` is the parent.
+
+The `{company}` url parameter will equal the selected `Company` field value.
+
+### Response Format:
+
+The select field expects a `value` & `display`. Map your results like so:
+
+```php
+Route::get('api/company/{company}/users', function($company_id) {
+
+    $company = \App\Company::find($company_id);
+
+    return $company->users->map(function($user) {
+        return [ 'value' => $user->id, 'display' => $user->name ];
+    });
+})->middleware(['nova']);
+```
+
+### Make children depend on other children
+
+`City` makes a request based on `State`, which makes a request based on `Country`:
+
+```php
+Select::make('Country')
+    ->options([]),
+
+NovaAjaxSelect::make('State')
+    ->get('/api/country/{country}/states')
+    ->parent('country'),
+
+NovaAjaxSelect::make('City')
+    ->get('/api/state/{state}/cities')
+    ->parent('state'),
+```
+
+### Make multiple children depend on one parent
+
+`File` & `Comment` will both make a request based on `Project`
+
+```php
+BelongsTo::make('Project'),
+
+NovaAjaxSelect::make('File')
+    ->get('/{project}/files')
+    ->parent('project'),
+
+NovaAjaxSelect::make('Comment')
+    ->get('/{project}/comments')
+    ->parent('project'),
 ```
 
 ## Testing
@@ -76,6 +120,8 @@ Please review [our security policy](../../security/policy) on how to report secu
 
 ## Credits
 
+- [alexwenzel](https://github.com/alexwenzel)
+- [dillingham](https://github.com/dillingham)
 - [Gabriele Sbaiz](https://github.com/gabrielesbaiz)
 - [All Contributors](../../contributors)
 
