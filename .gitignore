@@ -32,3 +32,6 @@ testbench.yaml
 /coverage
 tlint.json
 auth.json
+
+### Mac ###
+.DS_Store
