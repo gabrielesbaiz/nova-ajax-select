@@ -2,16 +2,16 @@
 
 namespace Gabrielesbaiz\NovaAjaxSelect;
 
-use Laravel\Nova\Fields\Field;
+use Laravel\Nova\Fields\Select;
 
-class NovaAjaxSelect extends Field
+class NovaAjaxSelect extends Select
 {
     /**
      * The field's component.
      *
      * @var string
      */
-    public $component = 'ajax-select';
+    public $component = 'nova-ajax-select';
 
     public $showOnIndex = false;
 
@@ -23,7 +23,9 @@ class NovaAjaxSelect extends Field
      */
     public function get($endpoint): static
     {
-        $this->withMeta(['endpoint' => $endpoint]);
+        $this->withMeta([
+            'endpoint' => $endpoint,
+        ]);
 
         return $this;
     }
@@ -34,7 +36,9 @@ class NovaAjaxSelect extends Field
      */
     public function parent($attribute): static
     {
-        $this->withMeta(['parent_attribute' => $attribute]);
+        $this->withMeta([
+            'parent_attribute' => $attribute,
+        ]);
 
         return $this;
     }

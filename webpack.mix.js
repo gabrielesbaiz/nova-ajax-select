@@ -1,10 +1,11 @@
 let mix = require("laravel-mix");
+let NovaExtension = require("laravel-nova-devtool");
 
-let path = require("path");
-
-require("./nova.mix");
+mix.extend("nova", new NovaExtension());
 
 mix.setPublicPath("dist")
     .js("resources/js/field.js", "js")
     .vue({ version: 3 })
-    .nova("gabrielesbaiz/nova-ajax-select");
+    .css("resources/css/field.css", "css")
+    .nova("gabrielesbaiz/nova-ajax-select")
+    .version();
