@@ -1,45 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Gabrielesbaiz\NovaAjaxSelect;
 
-use Laravel\Nova\Fields\Select;
-
-class NovaAjaxSelect extends Select
-{
-    /**
-     * The field's component.
-     *
-     * @var string
-     */
-    public $component = 'nova-ajax-select';
-
-    public $showOnIndex = false;
-
-    public $showOnDetail = false;
-
-    /**
-     * @param        $endpoint
-     * @return $this
-     */
-    public function get($endpoint): static
-    {
-        $this->withMeta([
-            'endpoint' => $endpoint,
-        ]);
-
-        return $this;
-    }
-
-    /**
-     * @param        $attribute
-     * @return $this
-     */
-    public function parent($attribute): static
-    {
-        $this->withMeta([
-            'parent_attribute' => $attribute,
-        ]);
-
-        return $this;
-    }
-}
+/**
+ * Backwards-compatible alias for the 1.x class name.
+ *
+ * @deprecated 2.0 Use {@see AjaxSelect} instead; removed in 3.0.
+ */
+class NovaAjaxSelect extends AjaxSelect {}

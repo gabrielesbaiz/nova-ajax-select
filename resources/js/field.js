@@ -1,11 +1,12 @@
-import IndexField from "./components/IndexField";
-import DetailField from "./components/DetailField";
-import FormField from "./components/FormField";
-import PreviewField from "./components/PreviewField";
+import DetailField from "./components/DetailField.vue";
+import FormField from "./components/FormField.vue";
+import IndexField from "./components/IndexField.vue";
 
-Nova.booting((app, store) => {
-    app.component("index-nova-ajax-select", IndexField);
-    app.component("detail-nova-ajax-select", DetailField);
-    app.component("form-nova-ajax-select", FormField);
-    // app.component('preview-nova-ajax-select', PreviewField)
+Nova.booting((app) => {
+    // PascalCase on purpose: Nova.hasComponent() capitalizes and camelizes the
+    // name before looking it up, so a kebab registration is invisible to it,
+    // while Vue still resolves <component is="form-gabrielesbaiz-ajax-select" />.
+    app.component("IndexGabrielesbaizAjaxSelect", IndexField);
+    app.component("DetailGabrielesbaizAjaxSelect", DetailField);
+    app.component("FormGabrielesbaizAjaxSelect", FormField);
 });
