@@ -12,26 +12,42 @@ use Gabrielesbaiz\NovaAjaxSelect\Support\OptionCollection;
 use Illuminate\Support\Facades\Cache;
 
 /**
- * Optional caching of resolved option sets.
- *
- * Caching is opt-in per field. Remember that the cache is NOT scoped to the
- * authenticated user or tenant by default - scoping it that way would destroy
- * the hit rate. If your options depend on who is asking, set `cacheScope()`.
+ * Cache keys are not scoped to the authenticated user or tenant; use cacheScope() for that.
  */
 trait CachesOptions
 {
+    /**
+     * The time to live for cached option sets.
+     */
     protected DateTimeInterface|DateInterval|int|null $cacheTtl = null;
 
+    /**
+     * The cache store that should be used.
+     */
     protected ?string $cacheStore = null;
 
-    /** @var array<int, string> */
+    /**
+     * The tags that should be applied to the cache entry.
+     *
+     * @var array<int, string>
+     */
     protected array $cacheTags = [];
 
-    /** @var (Closure(AjaxSelectContext): mixed)|array<array-key, mixed>|null */
+    /**
+     * The additional values that should be mixed into the cache key.
+     *
+     * @var (Closure(AjaxSelectContext): mixed)|array<array-key, mixed>|null
+     */
     protected $cacheScope = null;
 
+    /**
+     * Indicates if search results should be cached.
+     */
     protected bool $cacheSearchResults = false;
 
+    /**
+     * Cache the resolved option set for the given duration.
+     */
     public function cacheFor(DateTimeInterface|DateInterval|int $ttl, ?string $store = null): static
     {
         $this->cacheTtl = $ttl;
@@ -41,8 +57,7 @@ trait CachesOptions
     }
 
     /**
-     * Add anything the option set depends on but the key cannot infer -
-     * the current tenant, for instance.
+     * Mix additional values, such as the current tenant, into the cache key.
      *
      * @param  (Closure(AjaxSelectContext): mixed)|array<array-key, mixed>  $scope
      */
@@ -54,6 +69,8 @@ trait CachesOptions
     }
 
     /**
+     * Set the tags that should be applied to the cache entry.
+     *
      * @param  array<int, string>  $tags
      */
     public function cacheTags(array $tags): static
@@ -64,8 +81,7 @@ trait CachesOptions
     }
 
     /**
-     * Cache search results too. Off by default: an indexed LIKE usually beats
-     * one cache entry per keystroke.
+     * Cache search results in addition to the unsearched option set.
      */
     public function cacheSearchResults(bool $cache = true): static
     {
@@ -74,6 +90,9 @@ trait CachesOptions
         return $this;
     }
 
+    /**
+     * Disable caching for the field.
+     */
     public function withoutCache(): static
     {
         $this->cacheTtl = 0;
@@ -81,6 +100,9 @@ trait CachesOptions
         return $this;
     }
 
+    /**
+     * Get the cache key for the option set resolved in the given context.
+     */
     public function optionsCacheKey(AjaxSelectContext $context): string
     {
         return (string) config('nova-ajax-select.cache.prefix', 'nova-ajax-select').':'.hash('xxh128', json_encode([
@@ -95,6 +117,8 @@ trait CachesOptions
     }
 
     /**
+     * Resolve the option set through the cache when one is configured.
+     *
      * @param  Closure(): OptionCollection  $resolve
      */
     protected function rememberOptions(AjaxSelectContext $context, string $key, Closure $resolve): OptionCollection

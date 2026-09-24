@@ -16,7 +16,7 @@ use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Resource;
 
 /**
- * A three-level chain: province -> city -> zip code.
+ * A three-level chain of region, city and zip code.
  */
 class CustomerResource extends Resource
 {
@@ -38,16 +38,16 @@ class CustomerResource extends Resource
 
             Text::make('Name'),
 
-            Select::make('Province', 'province_id')->options([
+            Select::make('Region', 'region_id')->options([
                 1 => 'Udine',
                 2 => 'Trieste',
             ]),
 
             AjaxSelect::make('City', 'city_id')
-                ->parent('province_id')
+                ->parent('region_id')
                 ->optionsFromModel(
                     City::class,
-                    query: fn (Builder $query, AjaxSelectContext $context) => $query->where('province_id', $context->parent())
+                    query: fn (Builder $query, AjaxSelectContext $context) => $query->where('region_id', $context->parent())
                 )
                 ->labelFrom('city.name'),
 

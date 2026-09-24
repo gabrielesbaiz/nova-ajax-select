@@ -6,13 +6,12 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Option caching
+    | Option Caching
     |--------------------------------------------------------------------------
     |
-    | Defaults for fields that do not call cacheFor() themselves. The cache key
-    | is NOT scoped to the authenticated user or tenant, because that would
-    | destroy the hit rate. If a field's options depend on who is asking, give
-    | it an explicit ->cacheScope().
+    | Here you may configure the caching defaults used by fields that do not
+    | call cacheFor() themselves. Cache keys are not scoped to the current
+    | user or tenant, so per-user options should declare a cache scope.
     |
     */
 
@@ -28,8 +27,9 @@ return [
     | Search
     |--------------------------------------------------------------------------
     |
-    | Defaults for asyncSearchable() fields. "limit" also caps how many options
-    | a non-searchable field may serialize into the form payload.
+    | The following options configure the defaults used by fields that are
+    | marked as asynchronously searchable. The "limit" option also caps
+    | how many options any field may serialize into a form payload.
     |
     */
 
@@ -41,11 +41,12 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Option validation
+    | Option Validation
     |--------------------------------------------------------------------------
     |
-    | Automatically reject submitted values that are not among the resolved
-    | options. Set to false to disable it application-wide.
+    | This option determines whether submitted values are automatically
+    | rejected when they are not among the field's resolved options.
+    | Disabling it turns the additional validation rule off entirely.
     |
     */
 

@@ -9,11 +9,17 @@ use Laravel\Nova\Nova;
 
 class AjaxSelectServiceProvider extends ServiceProvider
 {
+    /**
+     * Register any application services.
+     */
     public function register(): void
     {
         $this->mergeConfigFrom(__DIR__.'/../config/nova-ajax-select.php', 'nova-ajax-select');
     }
 
+    /**
+     * Bootstrap any application services.
+     */
     public function boot(): void
     {
         $this->publishes([
@@ -25,14 +31,13 @@ class AjaxSelectServiceProvider extends ServiceProvider
         ], 'nova-ajax-select-lang');
 
         Nova::serving(function (): void {
-            // Later calls win, so the application's own overrides come last.
+            // Later calls win, so application overrides are registered last.
             Nova::translations(__DIR__.'/../lang/en.json');
             Nova::translations(__DIR__.'/../lang/'.app()->getLocale().'.json');
             Nova::translations(lang_path('vendor/nova-ajax-select/'.app()->getLocale().'.json'));
 
-            // The handle is the public URL segment and must not collide with
-            // alexwenzel/ajax-select: Nova resolves scripts by name with
-            // ->first(), so a duplicate handle means one bundle is never served.
+            // Nova resolves scripts by name with "first", so a handle shared
+            // with alexwenzel/ajax-select would leave one bundle unserved.
             Nova::script('gabrielesbaiz-nova-ajax-select', __DIR__.'/../dist/js/field.js');
         });
     }

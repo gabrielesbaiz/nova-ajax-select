@@ -10,27 +10,29 @@ use IteratorAggregate;
 use Traversable;
 
 /**
- * An ordered, normalized set of options.
- *
  * @implements IteratorAggregate<int, Option>
  */
 final class OptionCollection implements \Countable, IteratorAggregate
 {
     /**
+     * Create a new option collection.
+     *
      * @param  array<int, Option>  $options
      */
     private function __construct(private array $options = []) {}
 
+    /**
+     * Create a new empty option collection.
+     */
     public static function empty(): self
     {
         return new self;
     }
 
     /**
-     * Normalize any supported payload into Nova's `{label, value}` shape.
+     * Create a new option collection from the given payload.
      *
-     * Accepts value => label maps, lists of option arrays (including the legacy
-     * `{value, display}` shape), models, enums and scalars.
+     * Accepts "value => label" maps, lists of option arrays, models, enums and scalars.
      */
     public static function make(mixed $options): self
     {
@@ -42,8 +44,7 @@ final class OptionCollection implements \Countable, IteratorAggregate
             return $options;
         }
 
-        // Enum class-string: `optionsFromEnum()` normally handles this, but an
-        // `options(SomeEnum::class)` call should not silently produce nothing.
+        // An options(SomeEnum::class) call should not silently produce nothing.
         if (is_string($options) && enum_exists($options)) {
             $options = $options::cases();
         }
@@ -63,8 +64,8 @@ final class OptionCollection implements \Countable, IteratorAggregate
         $normalized = [];
 
         foreach ($options as $key => $option) {
-            // A list of option arrays carries its own value; only associative
-            // `value => label` maps may use the key.
+            // A list of option arrays carries its own value; only a
+            // "value => label" map may use the key.
             $option = Option::make($option, is_int($key) && is_array($option) ? null : $key);
 
             if ($option !== null) {
@@ -75,6 +76,9 @@ final class OptionCollection implements \Countable, IteratorAggregate
         return new self($normalized);
     }
 
+    /**
+     * Take the first given number of options.
+     */
     public function take(?int $limit): self
     {
         if ($limit === null || $limit <= 0 || count($this->options) <= $limit) {
@@ -85,7 +89,7 @@ final class OptionCollection implements \Countable, IteratorAggregate
     }
 
     /**
-     * Filter in PHP. Only used by sources that cannot push the search into SQL.
+     * Filter the options by label, in PHP.
      */
     public function search(?string $search): self
     {
@@ -101,11 +105,17 @@ final class OptionCollection implements \Countable, IteratorAggregate
         )));
     }
 
+    /**
+     * Determine if the collection contains the given value.
+     */
     public function has(mixed $value): bool
     {
         return $this->find($value) !== null;
     }
 
+    /**
+     * Get the option matching the given value.
+     */
     public function find(mixed $value): ?Option
     {
         if ($value === null || $value === '') {
@@ -123,14 +133,16 @@ final class OptionCollection implements \Countable, IteratorAggregate
         return null;
     }
 
+    /**
+     * Get the label for the given value.
+     */
     public function labelFor(mixed $value): ?string
     {
         return $this->find($value)?->label;
     }
 
     /**
-     * Ensure the given option is present, prepending it when missing, so a
-     * stored value never disappears from a searched or paginated list.
+     * Prepend the given option when it is not already present.
      */
     public function prepend(?Option $option): self
     {
@@ -142,6 +154,8 @@ final class OptionCollection implements \Countable, IteratorAggregate
     }
 
     /**
+     * Serialize the options for the field.
+     *
      * @return array<int, array<string, mixed>>
      */
     public function serialize(): array
@@ -150,6 +164,8 @@ final class OptionCollection implements \Countable, IteratorAggregate
     }
 
     /**
+     * Get the value of every option.
+     *
      * @return array<int, string|int>
      */
     public function values(): array
@@ -158,6 +174,8 @@ final class OptionCollection implements \Countable, IteratorAggregate
     }
 
     /**
+     * Get the options as a collection.
+     *
      * @return Collection<int, Option>
      */
     public function collect(): Collection
@@ -165,16 +183,25 @@ final class OptionCollection implements \Countable, IteratorAggregate
         return new Collection($this->options);
     }
 
+    /**
+     * Determine if the collection is empty.
+     */
     public function isEmpty(): bool
     {
         return $this->options === [];
     }
 
+    /**
+     * Count the options in the collection.
+     */
     public function count(): int
     {
         return count($this->options);
     }
 
+    /**
+     * Get an iterator for the options.
+     */
     public function getIterator(): Traversable
     {
         return new \ArrayIterator($this->options);

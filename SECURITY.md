@@ -49,7 +49,7 @@ declared through `parent()` and `dependsOn()`. A closure calling
 
 **Forged selections.** A submitted value is checked against the options the
 field would actually offer *for the parent values submitted alongside it*, so
-changing `city_id` to a city in another province is rejected even though the id
+changing `city_id` to a city in another region is rejected even though the id
 exists. The check is a single membership query — `whereKey(...)->exists()` for a
 model source — rather than a materialized `Rule::in`, so it cannot be turned
 into a memory-exhaustion vector by pointing a field at a large table.
@@ -74,11 +74,11 @@ These are deliberate. Please do not report them as vulnerabilities.
 **The options cache is not scoped to the user or tenant by default.** The key is
 derived from the source, the field, the parent values, the limit and the locale
 — not from who is asking. Scoping every entry by user would destroy the hit rate
-for the large majority of fields whose options are global (provinces, statuses,
+for the large majority of fields whose options are global (regions, statuses,
 countries). **If a field's options depend on the tenant or the viewer, you must
 set `cacheScope()`**, and caching is off unless you turn it on. This is the one
-foot-gun in the package, it is documented in the README under a caution
-callout, and it is a deliberate trade rather than an oversight.
+foot-gun in the package, it is documented on the documentation site under a
+caution callout, and it is a deliberate trade rather than an oversight.
 
 **Column names are code, not request data.** `searchColumns()`, the `label` and
 `value` arguments of `optionsFromModel()`, the relation name and the

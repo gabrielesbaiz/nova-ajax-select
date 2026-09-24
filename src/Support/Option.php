@@ -9,12 +9,13 @@ use Illuminate\Database\Eloquent\Model;
 use Stringable;
 
 /**
- * A single, already normalized option in Nova's `{label, value}` shape.
- *
  * @implements Arrayable<string, mixed>
  */
 final readonly class Option implements Arrayable
 {
+    /**
+     * Create a new option instance.
+     */
     public function __construct(
         public string|int $value,
         public string $label,
@@ -24,9 +25,9 @@ final readonly class Option implements Arrayable
     ) {}
 
     /**
-     * Build an option from any of the shapes this package has ever accepted.
+     * Create a new option from the given value.
      *
-     * Supported: scalars, `{value|id, label|display|title|name|text}` arrays,
+     * Accepts scalars, {value|id, label|display|title|name|text} arrays,
      * Eloquent models, Arrayable, BackedEnum and Stringable.
      */
     public static function make(mixed $option, string|int|null $key = null): ?self
@@ -51,7 +52,7 @@ final readonly class Option implements Arrayable
             $option = (string) $option;
         }
 
-        // `['it' => 'Italy']` — the key carries the value, the item the label.
+        // In a "value => label" map the key carries the value.
         if (! is_array($option)) {
             return $key !== null
                 ? new self(self::castValue($key), (string) $option)
@@ -64,7 +65,7 @@ final readonly class Option implements Arrayable
             return null;
         }
 
-        // `display` is the legacy 1.x / alexwenzel key; `label` always wins.
+        // "display" is the legacy 1.x key; "label" always wins.
         $label = $option['label']
             ?? $option['display']
             ?? $option['title']
@@ -82,8 +83,7 @@ final readonly class Option implements Arrayable
     }
 
     /**
-     * Cast numeric strings to integers, mirroring Nova's own Select field so
-     * strict comparisons against integer foreign keys keep working.
+     * Cast numeric strings to integers, mirroring Nova's own Select field.
      */
     public static function castValue(mixed $value): string|int
     {
@@ -103,6 +103,8 @@ final readonly class Option implements Arrayable
     }
 
     /**
+     * Get the instance as an array.
+     *
      * @return array<string, mixed>
      */
     public function toArray(): array

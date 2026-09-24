@@ -10,23 +10,22 @@ use Gabrielesbaiz\NovaAjaxSelect\Support\AjaxSelectContext;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
-/**
- * Assert that the submitted value really is one of the field's options.
- *
- * Deliberately lazy: asking the source whether it contains one value is a
- * single indexed query, while Rule::in() would force every option to be
- * materialized on every save.
- */
 final class ValueIsAnOption implements ValidationRule
 {
+    /**
+     * Create a new rule instance.
+     */
     public function __construct(
         private readonly AjaxSelect $field,
         private readonly string|Closure|null $message = null,
     ) {}
 
+    /**
+     * Run the validation rule.
+     */
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
-        // Presence is required/nullable's job, not ours.
+        // Presence is the job of the required and nullable rules.
         if ($value === null || $value === '' || $this->field->isValidNullValue($value)) {
             return;
         }

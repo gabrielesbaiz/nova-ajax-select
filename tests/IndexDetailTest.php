@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Gabrielesbaiz\NovaAjaxSelect\AjaxSelect;
 use Gabrielesbaiz\NovaAjaxSelect\Tests\Fixtures\Models\City;
 use Gabrielesbaiz\NovaAjaxSelect\Tests\Fixtures\Models\Customer;
-use Gabrielesbaiz\NovaAjaxSelect\Tests\Fixtures\Models\Province;
+use Gabrielesbaiz\NovaAjaxSelect\Tests\Fixtures\Models\Region;
 use Gabrielesbaiz\NovaAjaxSelect\Tests\Fixtures\Status;
 use Illuminate\Support\Facades\DB;
 use Laravel\Nova\Http\Requests\NovaRequest;
@@ -22,17 +22,17 @@ function displayRequest(): NovaRequest
 beforeEach(function (): void {
     AjaxSelect::flushLabelMemo();
 
-    $province = Province::create(['name' => 'Udine']);
+    $region = Region::create(['name' => 'Udine']);
 
-    City::create(['province_id' => $province->id, 'name' => 'Udine']);
-    City::create(['province_id' => $province->id, 'name' => 'Tarcento']);
+    City::create(['region_id' => $region->id, 'name' => 'Udine']);
+    City::create(['region_id' => $region->id, 'name' => 'Tarcento']);
 });
 
 it('hides itself when it has no way to resolve a label', function (): void {
     $request = displayRequest();
     $customer = Customer::create(['city_id' => 1]);
 
-    $field = AjaxSelect::make('City', 'city_id')->get('/api/cities/{province_id}')->parent('province_id');
+    $field = AjaxSelect::make('City', 'city_id')->get('/api/cities/{region_id}')->parent('region_id');
 
     expect($field->canResolveDisplayValue())->toBeFalse()
         ->and($field->isShownOnIndex($request, $customer))->toBeFalse()

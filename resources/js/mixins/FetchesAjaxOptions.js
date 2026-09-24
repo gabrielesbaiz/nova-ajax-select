@@ -52,6 +52,22 @@ export default {
             return Array.isArray(parents) ? parents : [parents];
         },
 
+        /**
+         * The human name of the first unfilled parent, for the empty state.
+         * Never a raw attribute: the server sends a readable fallback.
+         */
+        parentLabel() {
+            const attribute =
+                this.parentAttributes.find(
+                    (name) =>
+                        this.parentValues[name] === null ||
+                        this.parentValues[name] === undefined ||
+                        this.parentValues[name] === "",
+                ) ?? this.parentAttributes[0];
+
+            return this.ajaxSelect.parentLabels?.[attribute] ?? attribute;
+        },
+
         hasParents() {
             return this.parentAttributes.length > 0;
         },
@@ -105,6 +121,25 @@ export default {
             return present
                 ? this.options
                 : [this.selectedOption, ...this.options];
+        },
+
+        /**
+         * The list handed to the control.
+         *
+         * An async field is filtered by the server, so what arrived is already
+         * the answer. Everything else holds its whole option set and filters
+         * here rather than making a request per keystroke.
+         */
+        filteredOptions() {
+            if (this.isAsyncSearchable || !this.search) {
+                return this.displayOptions;
+            }
+
+            const needle = this.search.toLowerCase();
+
+            return this.displayOptions.filter((option) =>
+                String(option.label).toLowerCase().includes(needle),
+            );
         },
 
         searchIsLongEnough() {
@@ -295,6 +330,9 @@ export default {
 
         performSearch(search) {
             this.search = (search ?? "").trim();
+
+            // Filtering happens locally unless the server owns the search.
+            if (!this.isAsyncSearchable) return;
 
             if (!this.searchIsLongEnough) return;
 

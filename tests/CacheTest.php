@@ -62,25 +62,25 @@ it('serves a cached option set on the next resolve', function (): void {
 });
 
 it('varies the cache key by parent value, limit, locale and scope', function (): void {
-    $request = cacheRequest(['province_id' => 1]);
+    $request = cacheRequest(['region_id' => 1]);
 
-    $field = AjaxSelect::make('City', 'city_id')->parent('province_id')->options(fn () => []);
+    $field = AjaxSelect::make('City', 'city_id')->parent('region_id')->options(fn () => []);
     $base = $field->optionsCacheKey(AjaxSelectContext::forRequest($field, $request));
 
-    $other = AjaxSelect::make('City', 'city_id')->parent('province_id')->options(fn () => []);
-    $otherKey = $other->optionsCacheKey(AjaxSelectContext::forRequest($other, cacheRequest(['province_id' => 2])));
+    $other = AjaxSelect::make('City', 'city_id')->parent('region_id')->options(fn () => []);
+    $otherKey = $other->optionsCacheKey(AjaxSelectContext::forRequest($other, cacheRequest(['region_id' => 2])));
 
     expect($otherKey)->not->toBe($base);
 
     app()->setLocale('it');
-    $localeKey = $field->optionsCacheKey(AjaxSelectContext::forRequest($field, cacheRequest(['province_id' => 1])));
+    $localeKey = $field->optionsCacheKey(AjaxSelectContext::forRequest($field, cacheRequest(['region_id' => 1])));
     app()->setLocale('en');
 
     expect($localeKey)->not->toBe($base);
 
-    $scoped = AjaxSelect::make('City', 'city_id')->parent('province_id')->options(fn () => [])
+    $scoped = AjaxSelect::make('City', 'city_id')->parent('region_id')->options(fn () => [])
         ->cacheScope(fn () => 'tenant-2');
-    $scopedKey = $scoped->optionsCacheKey(AjaxSelectContext::forRequest($scoped, cacheRequest(['province_id' => 1])));
+    $scopedKey = $scoped->optionsCacheKey(AjaxSelectContext::forRequest($scoped, cacheRequest(['region_id' => 1])));
 
     expect($scopedKey)->not->toBe($base);
 });
@@ -137,7 +137,7 @@ it('honours withoutCache even when the config enables caching', function (): voi
 it('caches a model backed option set', function (): void {
     cacheRequest();
 
-    City::create(['province_id' => 1, 'name' => 'Udine']);
+    City::create(['region_id' => 1, 'name' => 'Udine']);
 
     AjaxSelect::make('City')->optionsFromModel(City::class)->cacheFor(60)->jsonSerialize();
 
@@ -146,4 +146,16 @@ it('caches a model backed option set', function (): void {
     $options = AjaxSelect::make('City')->optionsFromModel(City::class)->cacheFor(60)->jsonSerialize()['options'];
 
     expect($options)->toBe([['value' => 1, 'label' => 'Udine']]);
+});
+
+it('accepts a DateTimeInterface ttl and a named store', function (): void {
+    cacheRequest();
+
+    City::create(['region_id' => 1, 'name' => 'Toronto']);
+
+    $field = AjaxSelect::make('City')
+        ->optionsFromModel(City::class)
+        ->cacheFor(now()->addDay(), store: 'array');
+
+    expect($field->jsonSerialize()['options'])->toHaveCount(1);
 });

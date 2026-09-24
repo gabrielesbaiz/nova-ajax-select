@@ -13,8 +13,8 @@ class City extends Model
 
     protected $guarded = [];
 
-    public function province(): BelongsTo
+    public function region(): BelongsTo
     {
-        return $this->belongsTo(Province::class);
+        return $this->belongsTo(Region::class);
     }
 }

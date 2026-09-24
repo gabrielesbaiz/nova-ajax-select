@@ -10,7 +10,7 @@
                 <SearchInput
                     v-if="usesSearchInput"
                     v-model="value"
-                    :options="displayOptions"
+                    :options="filteredOptions"
                     track-by="value"
                     :debounce="debounceMs"
                     :disabled="controlIsDisabled"
@@ -161,7 +161,7 @@ export default {
         emptyStateText() {
             if (this.hasParents && !this.parentIsResolved) {
                 return this.__("Choose a :field first", {
-                    field: this.parentAttributes[0],
+                    field: this.parentLabel,
                 });
             }
 

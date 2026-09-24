@@ -7,7 +7,7 @@ namespace Gabrielesbaiz\NovaAjaxSelect\Tests\Fixtures\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Province extends Model
+class Region extends Model
 {
     public $timestamps = false;
 

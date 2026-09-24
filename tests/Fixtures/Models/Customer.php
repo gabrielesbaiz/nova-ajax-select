@@ -18,9 +18,9 @@ class Customer extends Model
         return $this->belongsTo(City::class);
     }
 
-    public function province(): BelongsTo
+    public function region(): BelongsTo
     {
-        return $this->belongsTo(Province::class);
+        return $this->belongsTo(Region::class);
     }
 
     public function seller(): BelongsTo

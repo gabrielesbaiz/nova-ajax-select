@@ -7,26 +7,27 @@ namespace Gabrielesbaiz\NovaAjaxSelect\Concerns;
 use Closure;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
-/**
- * Rendering a label instead of a raw foreign key on index and detail.
- *
- * The field only appears there when it can actually resolve a label, so an
- * existing endpoint-mode call site never starts showing bare ids.
- */
 trait ResolvesDisplayValues
 {
+    /**
+     * The path the display label should be read from on the resource.
+     */
     protected ?string $labelPath = null;
 
-    /** @var (Closure(mixed, mixed, NovaRequest): (string|null))|null */
+    /**
+     * The callback used to resolve the display label.
+     *
+     * @var (Closure(mixed, mixed, NovaRequest): (string|null))|null
+     */
     protected ?Closure $labelCallback = null;
 
+    /**
+     * Indicates if display labels should be resolved through the option source.
+     */
     protected bool $resolveLabelFromOptions = false;
 
     /**
-     * Read the label off the resource, e.g. `labelFrom('city.name')`.
-     *
-     * The cheapest option: no extra query at all when the relation is eager
-     * loaded through the resource's `$with`.
+     * Read the display label off the resource, e.g. "city.name".
      */
     public function labelFrom(string $path): static
     {
@@ -36,7 +37,9 @@ trait ResolvesDisplayValues
     }
 
     /**
-     * Resolve the label yourself, as `($value, $resource, $request)`.
+     * Resolve the display label using the given callback.
+     *
+     * The callback is invoked as ($value, $resource, $request).
      */
     public function labelUsing(Closure $callback): static
     {
@@ -46,10 +49,9 @@ trait ResolvesDisplayValues
     }
 
     /**
-     * Resolve labels through the option source.
+     * Resolve display labels through the option source.
      *
-     * Opt-in because it costs a lookup per distinct value; results are
-     * memoized per request, so repeated values on an index page are free.
+     * Costs one lookup per distinct value, memoized for the request.
      */
     public function resolveLabelFromOptions(bool $resolve = true): static
     {
@@ -58,18 +60,27 @@ trait ResolvesDisplayValues
         return $this;
     }
 
+    /**
+     * Determine if the field is shown on the index view.
+     */
     #[\Override]
     public function isShownOnIndex(NovaRequest $request, $resource): bool
     {
         return parent::isShownOnIndex($request, $resource) && $this->canResolveDisplayValue();
     }
 
+    /**
+     * Determine if the field is shown on the detail view.
+     */
     #[\Override]
     public function isShownOnDetail(NovaRequest $request, $resource): bool
     {
         return parent::isShownOnDetail($request, $resource) && $this->canResolveDisplayValue();
     }
 
+    /**
+     * Determine if the field is able to resolve a display label.
+     */
     public function canResolveDisplayValue(): bool
     {
         return $this->labelPath !== null
@@ -80,10 +91,7 @@ trait ResolvesDisplayValues
     }
 
     /**
-     * Resolve the field for display, labelling the stored value.
-     *
-     * A user-supplied displayUsing() callback still wins: Nova handles that
-     * branch itself.
+     * Resolve the field's value for display.
      */
     #[\Override]
     public function resolveForDisplay($resource, ?string $attribute = null): void
@@ -138,12 +146,15 @@ trait ResolvesDisplayValues
     }
 
     /**
-     * Per-request label memo, shared across every row of an index page.
+     * The resolved labels, memoized for the request across every index row.
      *
      * @var array<string, array<string, string|null>>
      */
     protected static array $labelMemo = [];
 
+    /**
+     * Flush the memoized display labels.
+     */
     public static function flushLabelMemo(): void
     {
         static::$labelMemo = [];

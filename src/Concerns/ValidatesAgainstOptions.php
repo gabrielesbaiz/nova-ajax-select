@@ -12,18 +12,28 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
-/**
- * Refusing values that are not actually selectable.
- */
 trait ValidatesAgainstOptions
 {
+    /**
+     * Indicates if submitted values are checked against the option set.
+     */
     protected ?bool $validatesOptions = null;
 
-    /** @var (Closure(mixed, AjaxSelectContext): bool)|null */
+    /**
+     * The callback used to determine option membership.
+     *
+     * @var (Closure(mixed, AjaxSelectContext): bool)|null
+     */
     protected ?Closure $optionValidator = null;
 
+    /**
+     * The message shown when the submitted value is not an option.
+     */
     protected string|Closure|null $optionValidationMessage = null;
 
+    /**
+     * Check submitted values against the option set.
+     */
     public function validateOptions(callable|bool $validate = true): static
     {
         $this->validatesOptions = is_bool($validate)
@@ -33,6 +43,9 @@ trait ValidatesAgainstOptions
         return $this;
     }
 
+    /**
+     * Disable checking submitted values against the option set.
+     */
     public function withoutOptionValidation(): static
     {
         $this->validatesOptions = false;
@@ -41,7 +54,9 @@ trait ValidatesAgainstOptions
     }
 
     /**
-     * Decide membership yourself, as `($value, $context)`.
+     * Determine option membership using the given callback.
+     *
+     * The callback is invoked as ($value, $context).
      */
     public function validateOptionsUsing(Closure $callback): static
     {
@@ -50,6 +65,9 @@ trait ValidatesAgainstOptions
         return $this;
     }
 
+    /**
+     * Set the message shown when the submitted value is not an option.
+     */
     public function optionValidationMessage(string|Closure $message): static
     {
         $this->optionValidationMessage = $message;
@@ -57,6 +75,9 @@ trait ValidatesAgainstOptions
         return $this;
     }
 
+    /**
+     * Determine if the given value is one of the field's options.
+     */
     public function passesOptionValidation(mixed $value, AjaxSelectContext $context): bool
     {
         if ($this->optionValidator !== null) {
@@ -66,6 +87,11 @@ trait ValidatesAgainstOptions
         return $this->optionSource()->contains($value, $context);
     }
 
+    /**
+     * Get the validation rules for the field.
+     *
+     * @return array<string, array<int, mixed>>
+     */
     #[\Override]
     public function getRules(NovaRequest $request): array
     {
@@ -81,6 +107,9 @@ trait ValidatesAgainstOptions
         ]];
     }
 
+    /**
+     * Determine if submitted values should be checked against the option set.
+     */
     protected function shouldValidateOptions(NovaRequest $request): bool
     {
         if ($this->validatesOptions === false) {
@@ -95,19 +124,15 @@ trait ValidatesAgainstOptions
             return false;
         }
 
-        // In endpoint mode the option set lives in the application's own route,
-        // so there is genuinely nothing to check against.
+        // In endpoint mode the option set lives in the application's own route.
         return ! $this->optionSource() instanceof EndpointSource;
     }
 
     /**
-     * Turn whatever Nova handed back into a flat rule array.
+     * Flatten the given rules into an array of individual rules.
      *
-     * Laravel only pipe-explodes a rule *value*, never the members of a rule
-     * array - it throws a BadMethodCallException on 'required|max:5' nested in
-     * one. Nova stores rules('required|max:5') as exactly that nested string,
-     * so appending our rule object would turn a working rule set into a fatal.
-     * Exploding here keeps both halves intact.
+     * Laravel pipe-explodes a rule value but not the members of a rule array,
+     * so a nested "required|max:5" string has to be split here.
      *
      * @return array<int, mixed>
      */
