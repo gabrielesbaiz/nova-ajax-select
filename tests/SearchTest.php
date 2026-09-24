@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Gabrielesbaiz\NovaAjaxSelect\AjaxSelect;
 use Gabrielesbaiz\NovaAjaxSelect\Support\AjaxSelectContext;
 use Gabrielesbaiz\NovaAjaxSelect\Tests\Fixtures\Models\City;
-use Gabrielesbaiz\NovaAjaxSelect\Tests\Fixtures\Models\Province;
+use Gabrielesbaiz\NovaAjaxSelect\Tests\Fixtures\Models\Region;
 use Illuminate\Support\Facades\DB;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
@@ -24,10 +24,10 @@ function searchRequest(?string $search = null, array $input = []): NovaRequest
 beforeEach(function (): void {
     AjaxSelect::flushLabelMemo();
 
-    $province = Province::create(['name' => 'Udine']);
+    $region = Region::create(['name' => 'Udine']);
 
     foreach (['Udine', 'Tarcento', 'Codroipo', 'Cividale'] as $name) {
-        City::create(['province_id' => $province->id, 'name' => $name]);
+        City::create(['region_id' => $region->id, 'name' => $name]);
     }
 });
 

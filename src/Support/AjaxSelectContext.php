@@ -11,25 +11,28 @@ use Illuminate\Database\Eloquent\Model;
 use Laravel\Nova\Fields\FormData;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
-/**
- * Everything an options resolver is allowed to know about the current request.
- *
- * Parent values always come from Nova's FormData, which is already restricted
- * to the attributes the field declared - a resolver never reads raw input.
- */
 final class AjaxSelectContext
 {
     /**
-     * The payload key the Vue component uses to smuggle a search term into
-     * Nova's own field-sync request, so this package owns no HTTP route.
+     * The payload key carrying the search term inside Nova's field-sync request.
+     *
+     * @var string
      */
     public const SEARCH_KEY = '__ajaxSelectSearch';
 
+    /**
+     * Indicates if the resource model has been resolved.
+     */
     private bool $modelWasResolved = false;
 
+    /**
+     * The resolved resource model.
+     */
     private ?Model $resolvedModel = null;
 
     /**
+     * Create a new context instance.
+     *
      * @param  array<string, mixed>  $parents
      * @param  (Closure(): (Model|null))|null  $modelResolver
      */
@@ -46,7 +49,7 @@ final class AjaxSelectContext
     ) {}
 
     /**
-     * Build the context for a dependent-field sync (the common path).
+     * Create a new context for a dependent field sync.
      */
     public static function forSync(AjaxSelect $field, NovaRequest $request, FormData $formData): self
     {
@@ -64,7 +67,7 @@ final class AjaxSelectContext
     }
 
     /**
-     * Build the context outside a sync, e.g. when the form is first rendered.
+     * Create a new context outside of a sync, such as when a form is first rendered.
      */
     public static function forRequest(AjaxSelect $field, NovaRequest $request): self
     {
@@ -82,8 +85,7 @@ final class AjaxSelectContext
     }
 
     /**
-     * Build the context for validation, reading parents from the submitted payload
-     * so a tampered child value is checked against the submitted parent.
+     * Create a new context for validation, reading parents from the submitted payload.
      */
     public static function forValidation(AjaxSelect $field, NovaRequest $request): self
     {
@@ -93,8 +95,7 @@ final class AjaxSelectContext
             parents: self::parentsFrom($field, static fn (string $attribute) => $request->input($attribute)),
             value: $request->input($field->attribute),
             search: null,
-            // Validation never materializes the full option set, but a source
-            // that cannot answer contains() cheaply falls back to resolving.
+            // Sources that cannot answer contains() cheaply fall back to resolving.
             limit: 0,
             mode: self::modeFrom($request),
             actionUriKey: $request->query('action'),
@@ -103,7 +104,7 @@ final class AjaxSelectContext
     }
 
     /**
-     * Get a parent value; defaults to the first declared parent.
+     * Get the given parent value, defaulting to the first declared parent.
      */
     public function parent(?string $attribute = null): mixed
     {
@@ -115,6 +116,8 @@ final class AjaxSelectContext
     }
 
     /**
+     * Get the given parent values, or all of them.
+     *
      * @return array<int, mixed>
      */
     public function parents(string ...$attributes): array
@@ -126,6 +129,9 @@ final class AjaxSelectContext
         return array_map(fn (string $attribute): mixed => $this->parents[$attribute] ?? null, $attributes);
     }
 
+    /**
+     * Determine if every declared parent has a value.
+     */
     public function hasAllParents(): bool
     {
         if ($this->parents === []) {
@@ -141,31 +147,40 @@ final class AjaxSelectContext
         return true;
     }
 
+    /**
+     * Determine if the field has a submitted or stored value.
+     */
     public function hasValue(): bool
     {
         return $this->value !== null && $this->value !== '';
     }
 
+    /**
+     * Determine if the request carries a search term.
+     */
     public function isSearching(): bool
     {
         return $this->search !== null && $this->search !== '';
     }
 
+    /**
+     * Determine if the request is for an action modal.
+     */
     public function isAction(): bool
     {
         return $this->mode === 'action';
     }
 
+    /**
+     * Determine if the request is for a form.
+     */
     public function isForm(): bool
     {
         return in_array($this->mode, ['create', 'update', 'attach', 'update-attached', 'action'], true);
     }
 
     /**
-     * The resource model being edited, or null on create and in action modals.
-     *
-     * Deliberately a method: resolving it costs a query that most resolvers
-     * never need.
+     * Get the resource model being edited, resolving it on first use.
      */
     public function model(): ?Model
     {
@@ -177,12 +192,17 @@ final class AjaxSelectContext
         return $this->resolvedModel;
     }
 
+    /**
+     * Get the authenticated user.
+     */
     public function user(): ?Authenticatable
     {
         return $this->request->user();
     }
 
     /**
+     * Read the field's parent values using the given reader.
+     *
      * @param  Closure(string): mixed  $reader
      * @return array<string, mixed>
      */
@@ -199,6 +219,9 @@ final class AjaxSelectContext
         return $parents;
     }
 
+    /**
+     * Get the search term carried by the given request.
+     */
     private static function searchFrom(NovaRequest $request): ?string
     {
         $search = $request->input(self::SEARCH_KEY);
@@ -212,6 +235,9 @@ final class AjaxSelectContext
         return $search === '' ? null : $search;
     }
 
+    /**
+     * Determine the mode the given request is made in.
+     */
     private static function modeFrom(NovaRequest $request): string
     {
         return match (true) {
@@ -225,6 +251,8 @@ final class AjaxSelectContext
     }
 
     /**
+     * Get the callback that resolves the resource model for the given request.
+     *
      * @return (Closure(): (Model|null))|null
      */
     private static function modelResolver(NovaRequest $request): ?Closure

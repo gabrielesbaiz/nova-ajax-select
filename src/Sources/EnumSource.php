@@ -13,12 +13,13 @@ use Gabrielesbaiz\NovaAjaxSelect\Support\OptionCollection;
 use Laravel\Nova\Nova;
 
 /**
- * A backed enum. Labels default to Nova's own humanization, matching the
- * behaviour of Nova's Select field.
+ * Labels default to Nova's own humanization, matching Nova's Select field.
  */
 final class EnumSource implements OptionSource
 {
     /**
+     * Create a new enum source instance.
+     *
      * @param  class-string<BackedEnum>  $enum
      * @param  (Closure(BackedEnum): string)|null  $label
      * @param  (Closure(BackedEnum): bool)|null  $filter
@@ -29,6 +30,9 @@ final class EnumSource implements OptionSource
         private readonly ?Closure $filter = null,
     ) {}
 
+    /**
+     * Resolve the limited, optionally searched option set.
+     */
     public function resolve(AjaxSelectContext $context): OptionCollection
     {
         $cases = $this->enum::cases();
@@ -45,6 +49,9 @@ final class EnumSource implements OptionSource
         return OptionCollection::make($options)->search($context->search)->take($context->limit ?: null);
     }
 
+    /**
+     * Determine if the given value is a selectable option.
+     */
     public function contains(mixed $value, AjaxSelectContext $context): bool
     {
         $case = $this->enum::tryFrom(is_int($value) ? $value : (string) $value);
@@ -56,6 +63,9 @@ final class EnumSource implements OptionSource
         return $this->filter === null || (bool) ($this->filter)($case);
     }
 
+    /**
+     * Resolve the label for a single value without materializing every option.
+     */
     public function label(mixed $value, AjaxSelectContext $context): ?string
     {
         $case = $this->enum::tryFrom(is_int($value) ? $value : (string) $value);
@@ -67,11 +77,17 @@ final class EnumSource implements OptionSource
         return $this->label !== null ? ($this->label)($case) : Nova::humanize($case);
     }
 
+    /**
+     * Get the stable identifier used to build cache keys for this source.
+     */
     public function signature(): string
     {
         return 'enum:'.$this->enum;
     }
 
+    /**
+     * Determine if labelling a value is cheap enough to do per index row.
+     */
     public function isCheapToLabel(): bool
     {
         return true;

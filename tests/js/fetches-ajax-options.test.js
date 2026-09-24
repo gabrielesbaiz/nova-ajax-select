@@ -48,19 +48,19 @@ beforeEach(() => {
 
 describe("parent resolution", () => {
     it("reads parents from the v2 meta block", () => {
-        const vm = harness({ parents: ["province_id"] });
+        const vm = harness({ parents: ["region_id"] });
 
-        expect(vm.parentAttributes).toEqual(["province_id"]);
+        expect(vm.parentAttributes).toEqual(["region_id"]);
         expect(vm.hasParents).toBe(true);
     });
 
     it("still reads the 1.x single parent key", () => {
         const vm = harness(
             {},
-            { currentField: { parent_attribute: "province_id" } },
+            { currentField: { parent_attribute: "region_id" } },
         );
 
-        expect(vm.parentAttributes).toEqual(["province_id"]);
+        expect(vm.parentAttributes).toEqual(["region_id"]);
     });
 
     it("treats an empty parent as unresolved", () => {
@@ -75,13 +75,13 @@ describe("parent resolution", () => {
 
     it("seeds parent values from the server so an edit form can load", () => {
         const vm = harness({
-            parents: ["province_id"],
-            parentValues: { province_id: 3 },
+            parents: ["region_id"],
+            parentValues: { region_id: 3 },
         });
 
         vm.seedFromField();
 
-        expect(vm.parentValues).toEqual({ province_id: 3 });
+        expect(vm.parentValues).toEqual({ region_id: 3 });
         expect(vm.parentIsResolved).toBe(true);
     });
 
@@ -96,7 +96,7 @@ describe("parent resolution", () => {
 
 describe("listeners", () => {
     it("does not subscribe in options mode, where nova already syncs", () => {
-        const vm = harness({ parents: ["province_id"], mode: "options" });
+        const vm = harness({ parents: ["region_id"], mode: "options" });
 
         vm.registerParentListeners();
 
@@ -105,15 +105,15 @@ describe("listeners", () => {
 
     it("subscribes in endpoint mode", () => {
         const vm = harness({
-            parents: ["province_id"],
+            parents: ["region_id"],
             mode: "endpoint",
-            endpoint: "/api/cities/{province_id}",
+            endpoint: "/api/cities/{region_id}",
         });
 
         vm.registerParentListeners();
 
         expect(global.Nova.$on).toHaveBeenCalledWith(
-            "form-province_id-change",
+            "form-region_id-change",
             expect.any(Function),
         );
     });
@@ -121,21 +121,21 @@ describe("listeners", () => {
 
 describe("endpoint mode", () => {
     const endpointField = {
-        parents: ["province_id"],
+        parents: ["region_id"],
         mode: "endpoint",
-        endpoint: "/api/cities/{province_id}",
+        endpoint: "/api/cities/{region_id}",
     };
 
     it("interpolates the parent value into the url", () => {
         const vm = harness(endpointField);
-        vm.parentValues = { province_id: 9 };
+        vm.parentValues = { region_id: 9 };
 
         expect(vm.endpointUrl).toBe("/api/cities/9");
     });
 
     it("does not request while a parent is missing", async () => {
         const vm = harness(endpointField);
-        vm.parentValues = { province_id: null };
+        vm.parentValues = { region_id: null };
 
         await vm.fetchFromEndpoint();
 
@@ -149,7 +149,7 @@ describe("endpoint mode", () => {
         });
 
         const vm = harness(endpointField);
-        vm.parentValues = { province_id: 1 };
+        vm.parentValues = { region_id: 1 };
 
         await vm.fetchFromEndpoint();
 
@@ -164,7 +164,7 @@ describe("endpoint mode", () => {
         });
 
         const vm = harness(endpointField);
-        vm.parentValues = { province_id: 1 };
+        vm.parentValues = { region_id: 1 };
         vm.options = [{ value: 1, label: "stale" }];
 
         await vm.fetchFromEndpoint();
@@ -181,7 +181,7 @@ describe("endpoint mode", () => {
         global.Nova.request = () => ({ get: () => Promise.reject(cancelled) });
 
         const vm = harness(endpointField);
-        vm.parentValues = { province_id: 1 };
+        vm.parentValues = { region_id: 1 };
 
         await vm.fetchFromEndpoint();
 
@@ -284,5 +284,70 @@ describe("search", () => {
         vm.reloadOptions();
 
         expect(vm.syncField).toHaveBeenCalled();
+    });
+});
+
+describe("local filtering", () => {
+    it("filters its own options when the server does not own the search", () => {
+        const vm = harness({ asyncSearchable: false });
+        vm.reloadOptions = vi.fn();
+        vm.options = [
+            { value: 1, label: "Torino" },
+            { value: 2, label: "Alessandria" },
+            { value: 3, label: "Alba" },
+        ];
+
+        vm.performSearch("al");
+
+        expect(vm.reloadOptions).not.toHaveBeenCalled();
+        expect(vm.filteredOptions.map((o) => o.label)).toEqual([
+            "Alessandria",
+            "Alba",
+        ]);
+    });
+
+    it("is case insensitive and clears when the term is emptied", () => {
+        const vm = harness({ asyncSearchable: false });
+        vm.reloadOptions = vi.fn();
+        vm.options = [
+            { value: 1, label: "Torino" },
+            { value: 2, label: "Alba" },
+        ];
+
+        vm.performSearch("TOR");
+        expect(vm.filteredOptions.map((o) => o.label)).toEqual(["Torino"]);
+
+        vm.performSearch("");
+        expect(vm.filteredOptions).toHaveLength(2);
+    });
+
+    it("leaves an async field to the server and does not filter twice", async () => {
+        const vm = harness({ asyncSearchable: true, minSearchLength: 0 });
+        vm.reloadOptions = vi.fn();
+        vm.options = [
+            { value: 1, label: "Torino" },
+            { value: 2, label: "Alba" },
+        ];
+
+        vm.performSearch("zzz");
+        await new Promise((r) => setTimeout(r, 20));
+
+        expect(vm.reloadOptions).toHaveBeenCalled();
+        // the server already answered; the component must not re-filter it away
+        expect(vm.filteredOptions).toHaveLength(2);
+    });
+
+    it("keeps the selected option reachable while filtering", () => {
+        const vm = harness({ asyncSearchable: false });
+        vm.options = [{ value: 2, label: "Alba" }];
+        vm.selectedOption = { value: 1, label: "Torino" };
+
+        expect(vm.filteredOptions.map((o) => o.label)).toEqual([
+            "Torino",
+            "Alba",
+        ]);
+
+        vm.performSearch("alb");
+        expect(vm.filteredOptions.map((o) => o.label)).toEqual(["Alba"]);
     });
 });

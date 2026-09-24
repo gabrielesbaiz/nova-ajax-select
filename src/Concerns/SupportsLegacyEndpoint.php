@@ -8,18 +8,14 @@ use Closure;
 use Gabrielesbaiz\NovaAjaxSelect\Sources\EndpointSource;
 
 /**
- * The 1.x URL mode, kept so existing call sites upgrade without edits.
- *
- * The browser fetches the application's own route and accepts both the legacy
- * `{value, display}` payload and Nova's `{value, label}`.
+ * The browser accepts both the legacy {value, display} payload and Nova's {value, label}.
  */
 trait SupportsLegacyEndpoint
 {
     /**
      * Fetch options from an application route.
      *
-     * The URL may contain `{resource-name}`, `{resource-id}` and one token per
-     * parent attribute, e.g. `/api/cities/{province_id}`.
+     * The URL may contain {resource-name}, {resource-id} and one token per parent attribute.
      *
      * @deprecated 2.0 Use options() or optionsFromModel() instead; removed in 3.0.
      */
@@ -38,11 +34,17 @@ trait SupportsLegacyEndpoint
         return $this->withOptionSource(new EndpointSource($url, $transform));
     }
 
+    /**
+     * Determine if the field fetches its options from an application route.
+     */
     public function usesEndpoint(): bool
     {
         return $this->optionSource() instanceof EndpointSource;
     }
 
+    /**
+     * Get the route the field fetches its options from.
+     */
     public function endpointUrl(): ?string
     {
         $source = $this->optionSource();

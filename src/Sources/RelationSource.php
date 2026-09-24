@@ -14,14 +14,14 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 
 /**
- * A relation on the resource model currently being edited.
- *
- * There is no model on create or inside an action modal, so the source is
- * empty there unless a query closure builds the relation another way.
+ * There is no resource model on create or inside an action modal, so the source
+ * is empty there unless a query closure builds the relation another way.
  */
 final class RelationSource implements OptionSource
 {
     /**
+     * Create a new relation source instance.
+     *
      * @param  (Closure(Builder, AjaxSelectContext): mixed)|null  $query
      * @param  array<int, string>  $searchColumns
      */
@@ -33,6 +33,8 @@ final class RelationSource implements OptionSource
     ) {}
 
     /**
+     * Set the columns that should be searched.
+     *
      * @param  array<int, string>  $columns
      */
     public function withSearchColumns(array $columns): self
@@ -42,6 +44,9 @@ final class RelationSource implements OptionSource
         return $this;
     }
 
+    /**
+     * Resolve the limited, optionally searched option set.
+     */
     public function resolve(AjaxSelectContext $context): OptionCollection
     {
         $query = $this->newQuery($context);
@@ -64,6 +69,9 @@ final class RelationSource implements OptionSource
         );
     }
 
+    /**
+     * Determine if the given value is a selectable option.
+     */
     public function contains(mixed $value, AjaxSelectContext $context): bool
     {
         $query = $this->newQuery($context);
@@ -75,6 +83,9 @@ final class RelationSource implements OptionSource
         return $query->whereKey($value)->exists();
     }
 
+    /**
+     * Resolve the label for a single value without materializing every option.
+     */
     public function label(mixed $value, AjaxSelectContext $context): ?string
     {
         $query = $this->newQuery($context);
@@ -88,16 +99,25 @@ final class RelationSource implements OptionSource
         return $label === null ? null : (string) $label;
     }
 
+    /**
+     * Get the stable identifier used to build cache keys for this source.
+     */
     public function signature(): string
     {
         return 'relation:'.$this->relation.':'.$this->labelColumn.($this->query !== null ? ':scoped' : '');
     }
 
+    /**
+     * Determine if labelling a value is cheap enough to do per index row.
+     */
     public function isCheapToLabel(): bool
     {
         return true;
     }
 
+    /**
+     * Get a new query for the source's relation.
+     */
     private function newQuery(AjaxSelectContext $context): ?Builder
     {
         $model = $context->model();
@@ -125,6 +145,9 @@ final class RelationSource implements OptionSource
         return $query;
     }
 
+    /**
+     * Apply the given search term to the query.
+     */
     private function applySearch(Builder $query, ?string $search): void
     {
         if ($search === null || $search === '') {
@@ -132,6 +155,7 @@ final class RelationSource implements OptionSource
         }
 
         $columns = $this->searchColumns !== [] ? $this->searchColumns : [$this->labelColumn];
+        // Escape the LIKE wildcards so a literal "%" or "_" does not widen the match.
         $term = '%'.str_replace(['%', '_'], ['\%', '\_'], $search).'%';
 
         $query->where(function (Builder $query) use ($columns, $term): void {

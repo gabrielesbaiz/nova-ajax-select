@@ -17,14 +17,6 @@ use Laravel\Nova\Fields\Dependent;
 use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
-/**
- * A select field whose options are resolved on the server whenever the fields
- * it depends on change.
- *
- * `parent()` is sugar over Nova's own dependent-field machinery, so the field
- * composes with `dependsOn()`, `hide()`, `show()` and `readonly()`, and works
- * unchanged inside panels, pivot forms and action modals.
- */
 class AjaxSelect extends Select
 {
     use CachesOptions;
@@ -38,26 +30,26 @@ class AjaxSelect extends Select
     /**
      * The field's component.
      *
-     * Namespaced on purpose: the 1.x handle collided with the upstream
-     * alexwenzel/ajax-select package, which silently won and left this field
-     * rendering as an unknown component.
+     * Namespaced to avoid colliding with the alexwenzel/ajax-select handle.
      *
      * @var string
      */
     public $component = 'gabrielesbaiz-ajax-select';
 
     /**
+     * Create a new field.
+     *
      * @param  string  $name
      * @param  string|null  $attribute
+     * @param  (callable(mixed, mixed, ?string):(mixed))|null  $resolveCallback
      */
     public function __construct($name, $attribute = null, ?callable $resolveCallback = null)
     {
         parent::__construct($name, $attribute, $resolveCallback);
 
-        // One owned Dependent, registered even with no parents, so the field is
-        // always given a dependentComponentKey and Nova will re-resolve it on
-        // sync. Pushed first so user-registered dependsOn() callbacks run after
-        // the options are in place and can still hide() or readonly() the field.
+        // Registered even without parents so the field always has a dependent
+        // component key, and registered first so dependsOn() callbacks run
+        // once the options are in place.
         $this->ajaxDependent = new Dependent([], new ResolveAjaxSelectOptions);
         $this->fieldDependencies[] = $this->ajaxDependent;
     }
@@ -75,8 +67,8 @@ class AjaxSelect extends Select
         return array_merge(parent::jsonSerialize(), [
             'ajaxSelect' => [
                 'parents' => $this->parentAttributes,
-                // The event bus emits nothing on mount, so an edit form cannot
-                // seed its first request without the parent values.
+                'parentLabels' => $this->parentLabels(),
+                // Seeds the first sync request, which the event bus cannot do on mount.
                 'parentValues' => $context->parents,
                 'selectedOption' => $this->selectedOption($context)?->toArray(),
                 'mode' => $this->usesEndpoint() ? 'endpoint' : 'options',
@@ -91,10 +83,9 @@ class AjaxSelect extends Select
     }
 
     /**
-     * Display values using their corresponding labels.
+     * Display values using their corresponding specified labels.
      *
-     * Overridden so the label comes from the option source rather than from
-     * Nova's static options array, which an ajax field never fills.
+     * @return $this
      */
     #[\Override]
     public function displayUsingLabels()

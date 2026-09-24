@@ -21,9 +21,8 @@ abstract class TestCase extends Orchestra
     {
         parent::setUp();
 
-        // Nova keeps its registered scripts, styles and translations in static
-        // properties, so without a flush one test's assets leak into the next.
-        // Assets are registered lazily on ServingNova, so this loses nothing.
+        // Nova holds registered assets in static properties, so they are
+        // flushed between tests and re-registered lazily on ServingNova.
         Nova::flushState();
 
         $this->migrateFixtures();
@@ -40,8 +39,7 @@ abstract class TestCase extends Orchestra
     protected function getPackageProviders($app): array
     {
         return [
-            // Nova renders through Inertia; without its provider the container
-            // cannot resolve Inertia\Ssr\Gateway during a request.
+            // Nova renders through Inertia, which must resolve its SSR gateway.
             ServiceProvider::class,
             NovaCoreServiceProvider::class,
             NovaServiceProvider::class,
@@ -73,15 +71,16 @@ abstract class TestCase extends Orchestra
             $table->string('password')->nullable();
         });
 
-        Schema::create('provinces', function (Blueprint $table): void {
+        Schema::create('regions', function (Blueprint $table): void {
             $table->id();
             $table->string('name');
+            $table->string('country')->nullable();
             $table->string('code')->nullable();
         });
 
         Schema::create('cities', function (Blueprint $table): void {
             $table->id();
-            $table->foreignId('province_id');
+            $table->foreignId('region_id');
             $table->string('name');
             $table->string('zip_code')->nullable();
         });
@@ -100,7 +99,7 @@ abstract class TestCase extends Orchestra
         Schema::create('customers', function (Blueprint $table): void {
             $table->id();
             $table->string('name')->nullable();
-            $table->foreignId('province_id')->nullable();
+            $table->foreignId('region_id')->nullable();
             $table->foreignId('city_id')->nullable();
             $table->string('zip_code')->nullable();
             $table->foreignId('dealer_id')->nullable();

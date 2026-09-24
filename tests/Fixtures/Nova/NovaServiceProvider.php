@@ -11,8 +11,7 @@ use Laravel\Nova\NovaApplicationServiceProvider;
 class NovaServiceProvider extends NovaApplicationServiceProvider
 {
     /**
-     * Register resources explicitly: the parent implementation scans an
-     * app/Nova directory that does not exist under Testbench.
+     * Register the application's Nova resources.
      */
     protected function resources(): void
     {
@@ -22,8 +21,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
     }
 
     /**
-     * Without a viewNova gate Nova denies every request outside local, and the
-     * denial renders the full layout instead of returning JSON.
+     * Register the Nova gate.
      */
     protected function gate(): void
     {

@@ -6,7 +6,7 @@ use Gabrielesbaiz\NovaAjaxSelect\AjaxSelect;
 use Gabrielesbaiz\NovaAjaxSelect\Rules\ValueIsAnOption;
 use Gabrielesbaiz\NovaAjaxSelect\Support\AjaxSelectContext;
 use Gabrielesbaiz\NovaAjaxSelect\Tests\Fixtures\Models\City;
-use Gabrielesbaiz\NovaAjaxSelect\Tests\Fixtures\Models\Province;
+use Gabrielesbaiz\NovaAjaxSelect\Tests\Fixtures\Models\Region;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -24,25 +24,25 @@ function storeRequest(array $input): NovaRequest
 function scopedCityField(): AjaxSelect
 {
     return AjaxSelect::make('City', 'city_id')
-        ->parent('province_id')
+        ->parent('region_id')
         ->optionsFromModel(
             City::class,
-            query: fn (Builder $query, AjaxSelectContext $context) => $query->where('province_id', $context->parent())
+            query: fn (Builder $query, AjaxSelectContext $context) => $query->where('region_id', $context->parent())
         );
 }
 
 beforeEach(function (): void {
     AjaxSelect::flushLabelMemo();
 
-    $udine = Province::create(['name' => 'Udine']);
-    $trieste = Province::create(['name' => 'Trieste']);
+    $udine = Region::create(['name' => 'Udine']);
+    $trieste = Region::create(['name' => 'Trieste']);
 
-    City::create(['province_id' => $udine->id, 'name' => 'Udine']);
-    City::create(['province_id' => $trieste->id, 'name' => 'Trieste']);
+    City::create(['region_id' => $udine->id, 'name' => 'Udine']);
+    City::create(['region_id' => $trieste->id, 'name' => 'Trieste']);
 });
 
 it('accepts a value that belongs to the submitted parent', function (): void {
-    $request = storeRequest(['province_id' => 1, 'city_id' => 1]);
+    $request = storeRequest(['region_id' => 1, 'city_id' => 1]);
 
     $rules = scopedCityField()->getRules($request);
 
@@ -50,7 +50,7 @@ it('accepts a value that belongs to the submitted parent', function (): void {
 });
 
 it('rejects a value that belongs to a different parent', function (): void {
-    $request = storeRequest(['province_id' => 1, 'city_id' => 2]);
+    $request = storeRequest(['region_id' => 1, 'city_id' => 2]);
 
     $rules = scopedCityField()->getRules($request);
 
@@ -58,20 +58,20 @@ it('rejects a value that belongs to a different parent', function (): void {
 });
 
 it('rejects a value that does not exist at all', function (): void {
-    $request = storeRequest(['province_id' => 1, 'city_id' => 999]);
+    $request = storeRequest(['region_id' => 1, 'city_id' => 999]);
 
     expect(Validator::make($request->all(), scopedCityField()->getRules($request))->passes())->toBeFalse();
 });
 
 it('leaves presence checks to the other rules', function (): void {
-    $request = storeRequest(['province_id' => 1, 'city_id' => null]);
+    $request = storeRequest(['region_id' => 1, 'city_id' => null]);
 
     expect(Validator::make($request->all(), scopedCityField()->nullable()->getRules($request))->passes())
         ->toBeTrue();
 });
 
 it('appends to existing rules without collapsing a pipe string', function (): void {
-    $request = storeRequest(['province_id' => 1, 'city_id' => 1]);
+    $request = storeRequest(['region_id' => 1, 'city_id' => 1]);
 
     $rules = scopedCityField()->rules('required|max:5')->getRules($request)['city_id'];
 
@@ -93,7 +93,7 @@ it('leaves a regex rule intact', function (): void {
 });
 
 it('can be disabled per field', function (): void {
-    $request = storeRequest(['province_id' => 1, 'city_id' => 999]);
+    $request = storeRequest(['region_id' => 1, 'city_id' => 999]);
 
     $rules = scopedCityField()->withoutOptionValidation()->getRules($request);
 
@@ -103,15 +103,15 @@ it('can be disabled per field', function (): void {
 it('can be disabled application wide', function (): void {
     config()->set('nova-ajax-select.validation.enabled', false);
 
-    $request = storeRequest(['province_id' => 1, 'city_id' => 999]);
+    $request = storeRequest(['region_id' => 1, 'city_id' => 999]);
 
     expect(Validator::make($request->all(), scopedCityField()->getRules($request))->passes())->toBeTrue();
 });
 
 it('adds no rule in endpoint mode because the options are unknowable', function (): void {
-    $request = storeRequest(['province_id' => 1, 'city_id' => 999]);
+    $request = storeRequest(['region_id' => 1, 'city_id' => 999]);
 
-    $field = AjaxSelect::make('City', 'city_id')->get('/api/cities/{province_id}')->parent('province_id');
+    $field = AjaxSelect::make('City', 'city_id')->get('/api/cities/{region_id}')->parent('region_id');
 
     expect($field->getRules($request))->toBe(['city_id' => []]);
 });
@@ -127,7 +127,7 @@ it('honours a custom validator even in endpoint mode', function (): void {
 });
 
 it('checks membership with a single exists query', function (): void {
-    $request = storeRequest(['province_id' => 1, 'city_id' => 1]);
+    $request = storeRequest(['region_id' => 1, 'city_id' => 1]);
 
     $rules = scopedCityField()->getRules($request);
 
@@ -140,11 +140,11 @@ it('checks membership with a single exists query', function (): void {
 });
 
 it('uses a custom failure message', function (): void {
-    $request = storeRequest(['province_id' => 1, 'city_id' => 2]);
+    $request = storeRequest(['region_id' => 1, 'city_id' => 2]);
 
-    $rules = scopedCityField()->optionValidationMessage('Pick a city in that province.')->getRules($request);
+    $rules = scopedCityField()->optionValidationMessage('Pick a city in that region.')->getRules($request);
 
     $validator = Validator::make($request->all(), $rules);
 
-    expect($validator->errors()->first('city_id'))->toBe('Pick a city in that province.');
+    expect($validator->errors()->first('city_id'))->toBe('Pick a city in that region.');
 });

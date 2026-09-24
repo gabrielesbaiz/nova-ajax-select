@@ -14,8 +14,8 @@ it('registers its script under a handle that cannot collide with the upstream pa
     $names = collect(Nova::allScripts())->map(fn ($asset) => $asset->name())->all();
 
     expect($names)->toContain('gabrielesbaiz-nova-ajax-select')
-        // 'ajax-select' is alexwenzel/ajax-select's handle; Nova serves scripts
-        // by name with ->first(), so sharing it means one bundle never loads.
+        // Nova serves scripts by name with "first", so a handle shared with
+        // alexwenzel/ajax-select would leave one bundle unloaded.
         ->and($names)->not->toContain('ajax-select');
 });
 
@@ -53,8 +53,7 @@ it('is still served when the upstream package has claimed the ajax-select handle
         ->filter(fn ($asset) => $asset->name() === 'gabrielesbaiz-nova-ajax-select')
         ->first();
 
-    // Nova serves by name with ->first(); a shared handle is what made the 1.x
-    // bundle silently unreachable.
+    // Nova serves by name with "first", so a shared handle hides one bundle.
     expect($resolved)->not->toBeNull();
 });
 
@@ -64,9 +63,8 @@ it('registers vue components under the names nova derives from the field compone
     $bundle = file_get_contents(__DIR__.'/../dist/js/field.js');
 
     foreach (['form', 'detail', 'index'] as $prefix) {
-        // Nova asks Vue for `<prefix>-<component>`, and Nova.hasComponent()
-        // capitalizes and camelizes before looking a name up, so the bundle has
-        // to register the PascalCase spelling.
+        // Nova capitalizes and camelizes a component name before looking it
+        // up, so the bundle registers the PascalCase spelling.
         $pascal = str_replace(' ', '', ucwords(str_replace('-', ' ', "{$prefix}-{$component}")));
 
         expect($bundle)->toContain($pascal);

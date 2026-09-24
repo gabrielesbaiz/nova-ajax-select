@@ -19,27 +19,36 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
-/**
- * Declaring and resolving the option set.
- */
 trait ResolvesOptions
 {
+    /**
+     * The source the field's options are resolved from.
+     */
     protected ?OptionSource $optionSource = null;
 
+    /**
+     * The context resolved for the current request.
+     */
     protected ?AjaxSelectContext $resolvedContext = null;
 
-    /** @var array<string, OptionCollection> */
+    /**
+     * The resolved option sets, keyed by cache key.
+     *
+     * @var array<string, OptionCollection>
+     */
     protected array $resolvedOptions = [];
 
-    /** @var array<int, string> */
+    /**
+     * The columns a database-backed source should search.
+     *
+     * @var array<int, string>
+     */
     protected array $searchColumns = [];
 
     /**
      * Set the options for the field.
      *
-     * A callable receives `(AjaxSelectContext $context, NovaRequest $request)`.
-     * PHP tolerates extra arguments, so `fn () =>`, `fn ($context) =>` and
-     * `fn ($context, $request) =>` are all valid.
+     * A callable is invoked as ($context, $request).
      *
      * @param  iterable<array-key, mixed>|callable|class-string<BackedEnum>  $options
      */
@@ -92,7 +101,9 @@ trait ResolvesOptions
     }
 
     /**
-     * Columns a database-backed source should search. Defaults to the label column.
+     * Set the columns a database-backed source should search.
+     *
+     * Defaults to the label column.
      */
     public function searchColumns(string ...$columns): static
     {
@@ -105,6 +116,9 @@ trait ResolvesOptions
         return $this;
     }
 
+    /**
+     * Set the source the field's options are resolved from.
+     */
     public function withOptionSource(OptionSource $source): static
     {
         $this->optionSource = $source;
@@ -113,14 +127,16 @@ trait ResolvesOptions
         return $this;
     }
 
+    /**
+     * Get the source the field's options are resolved from.
+     */
     public function optionSource(): OptionSource
     {
         return $this->optionSource ??= new ArraySource([]);
     }
 
     /**
-     * Remember the context built during a dependent-field sync so serialization,
-     * validation and display all reuse the same parent values.
+     * Set the context that serialization, validation and display should reuse.
      */
     public function withResolvedContext(AjaxSelectContext $context): static
     {
@@ -129,6 +145,9 @@ trait ResolvesOptions
         return $this;
     }
 
+    /**
+     * Get the context for the current request.
+     */
     public function currentContext(?NovaRequest $request = null): AjaxSelectContext
     {
         return $this->resolvedContext ??= AjaxSelectContext::forRequest(
@@ -138,7 +157,7 @@ trait ResolvesOptions
     }
 
     /**
-     * Resolve the option set, honouring the cache when one is configured.
+     * Resolve the option set for the given context.
      */
     public function resolveOptions(AjaxSelectContext $context): OptionCollection
     {
@@ -158,7 +177,7 @@ trait ResolvesOptions
     }
 
     /**
-     * Decide whether resolving the full option set is worth it for this request.
+     * Determine if the full option set should be resolved for the given context.
      */
     protected function shouldResolveOptions(AjaxSelectContext $context): bool
     {
@@ -170,8 +189,8 @@ trait ResolvesOptions
             return false;
         }
 
-        // An async-searchable field must not dump its whole table into the
-        // form payload; it waits for a search term.
+        // An async-searchable field waits for a search term rather than
+        // serializing its whole table into the form payload.
         if ($this->isAsyncSearchable() && ! $this->searchIsLongEnough($context)) {
             return false;
         }
@@ -180,13 +199,16 @@ trait ResolvesOptions
     }
 
     /**
-     * The one option we can still show without resolving anything: the stored value.
+     * Get the stored value as the only option, without resolving the source.
      */
     protected function selectedOptionOnly(AjaxSelectContext $context): OptionCollection
     {
         return OptionCollection::make([])->prepend($this->selectedOption($context));
     }
 
+    /**
+     * Get the option matching the currently stored value.
+     */
     protected function selectedOption(AjaxSelectContext $context): ?Option
     {
         $value = $context->hasValue() ? $context->value : $this->value;
@@ -201,7 +223,7 @@ trait ResolvesOptions
     }
 
     /**
-     * Serialize options for the field. Overrides Nova's Select.
+     * Serialize options for the field.
      *
      * @return array<int, array<string, mixed>>
      */
