@@ -2,7 +2,7 @@
 
 All notable changes to `nova-ajax-select` will be documented in this file.
 
-## 2.0.0
+## 2.0.0 - 2026-09-24
 
 ### Fixed
 
