@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Nova Ajax Select</title>
+<meta name="description" content="A Laravel Nova select field whose options are resolved on the server — scoped to the fields it depends on, searched in the database rather than the browser, and validated on the way back in.">
+<link rel="canonical" href="https://gabrielesbaiz.github.io/nova-ajax-select/">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>&#128201;</text></svg>">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Nova Ajax Select">
+<meta property="og:description" content="Seven thousand options. Twelve sent. A Nova select field that resolves its options on the server, scoped to whatever the user picked a moment ago.">
+<meta property="og:url" content="https://gabrielesbaiz.github.io/nova-ajax-select/">
+<meta property="og:site_name" content="Nova Ajax Select">
+<meta property="og:locale" content="en">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Nova Ajax Select">
+<meta name="twitter:description" content="Seven thousand options. Twelve sent. A Nova select field that resolves its options on the server, scoped to whatever the user picked a moment ago.">
+<meta name="theme-color" content="#fbfbf9" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0f0f0e" media="(prefers-color-scheme: dark)">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="app.css">
+<script defer src="app.js"></script>
+<script>
+/* Progressive enhancement. The landing page and the reveal bands are visible
+   in the markup so the site still reads with JavaScript disabled; these two
+   classes hand presentation back to app.js when it is available. "routed"
+   hides the landing page before first paint on a deep link, and app.js drops
+   it on the first route(). */
+(function (r) {
+  r.className += ' js';
+  if ((location.hash.slice(2) || 'home') !== 'home') r.className += ' routed';
+})(document.documentElement);
+</script>
+</head>
+<body>
+<header class="top">
+  <div class="mx in">
+    <a class="brand" href="#/home">Nova Ajax Select<i>.</i> <span class="ver">2.0</span></a>
+    <nav id="nav">
+      <a href="#/guide">Guide</a>
+      <a href="#/install">Install</a>
+      <a href="#/configuration">Configuration</a>
+      <a href="#/upgrade">Upgrade</a>
+      <a href="#/changelog">Changelog</a>
+      <a class="sponsor" href="https://github.com/sponsors/gabrielesbaiz"><span aria-hidden="true">&#9829;</span> Sponsor</a>
+    </nav>
+    <div class="tools">
+      <button class="search" id="openPal" aria-label="Search the documentation" aria-keyshortcuts="Meta+K">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="4.5"/><path d="M10.4 10.4 14 14"/></svg>
+        <span>Search</span><kbd id="kbd">&#8984;K</kbd>
+      </button>
+      <button class="mode" id="mode">Dark</button>
+    </div>
+  </div>
+  <div class="progress" id="progress" aria-hidden="true"></div>
+</header>
+
+<div class="pal" id="pal" hidden>
+  <div class="box" role="dialog" aria-modal="true" aria-label="Search the documentation">
+    <input id="palInput" type="text" placeholder="Jump to&hellip;" autocomplete="off" spellcheck="false"
+           aria-label="Search the documentation" role="combobox" aria-expanded="true"
+           aria-controls="palList" aria-autocomplete="list">
+    <ul id="palList" role="listbox" aria-label="Pages and sections"></ul>
+  </div>
+</div>
+
+<main>
+
+<!-- ================= HOME ================= -->
+<div class="page" id="home" data-title="Nova Ajax Select">
+  <section class="hero" id="hero">
+    <div class="mx">
+      <p class="eyebrow">gabrielesbaiz/nova-ajax-select &middot; 2.0</p>
+      <h1 id="posterLine">Seven thousand options. <em>Twelve</em> sent.</h1>
+      <div class="wipe" aria-hidden="true"></div>
+      <p class="sub">A Laravel Nova select field whose options are resolved on the server &mdash; scoped to whatever the user picked a moment ago, searched in the database rather than the browser, and validated on the way back in.</p>
+      <div class="meta">
+        <div><b class="num">0</b>routes this package registers</div>
+        <div><b class="num">7,896</b>rows it will not send you</div>
+        <div><b class="num">103</b>tests, including every doc sample</div>
+        <div><b class="num">11<small>kB</small></b>compiled field</div>
+      </div>
+      <div class="acts">
+        <a class="btn" href="#/guide">Read the guide</a>
+        <a class="btn ghost" href="#/install">Install</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="band reveal" id="payload">
+    <div class="mx">
+      <p class="eyebrow">01 &mdash; The payload</p>
+      <h2>A plain select ships the whole table, opened or not.</h2>
+      <p class="lead">Every option a Nova <code>Select</code> knows about is serialized into the form on render. For a status list that costs nothing. For a world cities table it is a third of a megabyte of JSON sent on the chance somebody opens the dropdown.</p>
+      <div class="weigh-grid">
+        <div>
+          <div class="weigh" aria-hidden="true">
+            <div class="col a">
+              <div class="cap"><b class="num" id="wA">0 kB</b>Select, every city</div>
+              <div class="slab" style="--h:100%"></div>
+              <div class="foot">7,896 options</div>
+            </div>
+            <div class="col b">
+              <div class="cap"><b class="num" id="wB">0 kB</b>AjaxSelect, scoped</div>
+              <div class="slab" style="--h:0.3%"></div>
+              <div class="foot">12 options</div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <p class="scale-note">Drawn to scale. The accent bar is three pixels tall because 0.9&nbsp;kB against 341&nbsp;kB is what three pixels looks like next to a seventeen&#8209;rem column.</p>
+          <p class="lead" style="margin-top:1.3rem">And the weight is only the visible half. The browser still has to parse it, hold it, and filter it on every keystroke &mdash; work the database was built to do and does against an index.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band reveal" id="filter">
+    <div class="mx">
+      <p class="eyebrow">02 &mdash; The filter</p>
+      <h2>Pick a country. Everything else is struck before the response is written.</h2>
+      <div class="ledger-grid">
+        <div>
+          <p class="lead" style="margin-top:0">The scope lives in the query, not in the browser. Choose the country and the field resolves only the cities that belong to it &mdash; ordered, capped by <code>limit()</code>, and checked again when the form comes back so a value from another country is refused even though the id exists.</p>
+          <p class="scale-note" style="border-left-color:var(--accent-text)">Note the near miss: the table holds two cities called Vancouver, and only one of them is in Canada. A filter by name in the browser would have let the other through.</p>
+          <div class="acts"><a class="btn ghost" href="#/guide">How it works</a></div>
+        </div>
+        <div class="ledger" aria-hidden="true">
+          <div class="hd"><span>cities &middot; country CA</span><b id="ledCount">7,896 rows</b></div>
+          <div class="rows" id="ledRows"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band reveal" id="how">
+    <div class="mx">
+      <p class="eyebrow">03 &mdash; How it works</p>
+      <h2>One line per relationship. Not one route per relationship.</h2>
+      <p class="lead">Country to city to postal code is three fields and no routes at all. The endpoints you hand-wrote &mdash; query, map to <code>value</code> and <code>display</code>, cache, repeat in every tenant&rsquo;s route file &mdash; stop existing.</p>
+      <div class="feats">
+        <div class="f"><p class="n">01</p><h3>Declare the parent</h3><p><code>parent()</code> registers a Nova dependency. The change travels the field event bus &mdash; no crawling the component tree.</p></div>
+        <div class="f"><p class="n">02</p><h3>Nova asks the server</h3><p>On its own sync endpoint, already authorized for this resource, this mode and this user before your closure runs.</p></div>
+        <div class="f"><p class="n">03</p><h3>The source resolves</h3><p>A closure, a model, a relation, a backed enum, a cached call to a geo service. Scoped, searched in SQL, capped.</p></div>
+        <div class="f"><p class="n">04</p><h3>The chain moves on</h3><p>A value the new parent doesn&rsquo;t own is cleared &mdash; and that clearing is what cascades to the next field down.</p></div>
+      </div>
+      <div class="code2">
+        <div>
+          <p class="cap">Before &mdash; a route per relationship</p>
+<pre><span class="c">// routes/nova.php, once per tenant</span>
+Route::get(<span class="k">'api/cities/{country}'</span>, function ($id) {
+    return Cache::rememberForever(
+        <span class="k">"cities.$id"</span>,
+        fn () =&gt; GeoService::citiesByCountry($id)
+    )-&gt;map(fn ($c) =&gt; [
+        <span class="k">'value'</span>   =&gt; $c[<span class="k">'id'</span>],
+        <span class="k">'display'</span> =&gt; $c[<span class="k">'name'</span>],
+    ]);
+});</pre>
+        </div>
+        <div>
+          <p class="cap on">After &mdash; the field knows</p>
+<pre>AjaxSelect::make(<span class="k">'City'</span>, <span class="k">'city_id'</span>)
+    -&gt;parent(<span class="k">'country_id'</span>)
+    -&gt;optionsFromModel(City::class, query:
+        fn ($q, $c) =&gt; $q-&gt;where(
+            <span class="k">'country_id'</span>, $c-&gt;parent()
+        ))
+    -&gt;labelFrom(<span class="k">'city.name'</span>)
+    -&gt;cacheFor(<span class="k">3600</span>);</pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band reveal" id="versus">
+    <div class="mx">
+      <p class="eyebrow">04 &mdash; Versus dependsOn</p>
+      <h2>If your options fit in the page, use <code>dependsOn</code>.</h2>
+      <p class="lead">Nova already re-renders a field when another one changes, and you can set <code>options()</code> inside that callback. For a status list or twenty categories that is the right tool and this package is overhead. Here is the line where it stops being.</p>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>&nbsp;</th><th>Select + dependsOn</th><th>AjaxSelect</th></tr></thead>
+          <tbody>
+            <tr><th>Small, in-memory option sets</th><td class="yes">Ideal</td><td class="no">Unnecessary</td></tr>
+            <tr><th>7,896 rows in the table</th><td class="no">All of them, in the payload</td><td class="yes">Scoped and capped</td></tr>
+            <tr><th>Search</th><td class="no">In the browser, over what it was sent</td><td class="yes">In SQL, across your columns</td></tr>
+            <tr><th>Options from an HTTP service</th><td class="no">Your problem</td><td class="yes">A closure</td></tr>
+            <tr><th>Label on index and detail</th><td class="no">A second field</td><td class="yes"><code>labelFrom()</code></td></tr>
+            <tr><th>Rejecting a forged value</th><td class="no">Hand-written rule</td><td class="yes">One membership query</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="support reveal" id="support">
+    <div class="mx">
+      <p class="eyebrow">Support this package</p>
+      <div class="top-grid">
+        <div>
+          <h2>Free forever.<br>Not free to <em>maintain.</em></h2>
+          <p class="body-copy">A field like this one is invisible when it works. Nobody opens a ticket about the 341&nbsp;kB the form did not send, or the forged city id the validator quietly refused on the way in.</p>
+          <p class="body-copy">Sponsorship is what keeps it current with the things it sits on &mdash; a Nova licence to test against, the version matrix, and the upgrade written the week a new major lands rather than the month somebody complains. It stays MIT either way.</p>
+        </div>
+        <div class="sponsor-card">
+          <div class="price num">$5</div>
+          <p class="terms">Per month &middot; cancel anytime</p>
+          <a class="btn" href="https://github.com/sponsors/gabrielesbaiz"><span aria-hidden="true">&#9829;</span> Become a sponsor</a>
+          <p class="fine">Company tiers put your logo in the README and on this page.</p>
+        </div>
+      </div>
+      <div class="ways">
+        <div class="w"><div class="ic" aria-hidden="true">&#11088;</div><span class="tag">Free</span><h3>Star the repo</h3><p>Thirty seconds, and it is the first signal other developers look at when deciding whether to trust a package.</p></div>
+        <div class="w"><div class="ic" aria-hidden="true">&#128029;</div><span class="tag">Free</span><h3>Open a good issue</h3><p>A clear reproduction is worth more than you think. Two of the bugs fixed in 2.0 were found writing the test for somebody else&rsquo;s report.</p></div>
+        <div class="w"><div class="ic" aria-hidden="true">&#10084;&#65039;</div><h3>Sponsor from $5</h3><p>Goes towards the maintenance nobody sees: framework upgrades, the Nova licence, and keeping 103 tests green.</p></div>
+        <div class="w"><div class="ic" aria-hidden="true">&#127970;</div><h3>Company tier</h3><p>Your logo here and in the README. If this field sits in an admin panel your team uses daily, it costs less than the afternoon it saves.</p></div>
+      </div>
+      <p class="why"><b><span aria-hidden="true">&#9829;</span> Why ask at all?</b> This package is MIT and always will be. Nothing is paywalled, nothing phones home, and no feature is held back for sponsors. Sponsorship buys maintenance time, not features &mdash; and if you cannot sponsor, the star and the bug report genuinely help.</p>
+    </div>
+  </section>
+</div>
+
+<!-- ================= DOCS SHELL ================= -->
+<div class="mx docs hidden" id="docsShell">
+  <aside class="sidenav" aria-label="Documentation">
+    <div class="group">
+      <h4>Getting started</h4>
+      <ul>
+        <li><a href="#/intro">Introduction</a></li>
+        <li><a href="#/install">Installation</a></li>
+        <li><a href="#/configuration">Configuration</a></li>
+      </ul>
+    </div>
+    <div class="group">
+      <h4>Usage</h4>
+      <ul>
+        <li><a href="#/guide">Guide</a></li>
+        <li><a href="#/troubleshooting">Troubleshooting</a></li>
+      </ul>
+    </div>
+    <div class="group">
+      <h4>Reference</h4>
+      <ul>
+        <li><a href="#/api">API reference</a></li>
+        <li><a href="#/security">Security model</a></li>
+      </ul>
+    </div>
+    <div class="group">
+      <h4>Project</h4>
+      <ul>
+        <li><a href="#/upgrade">Upgrading from 1.x</a></li>
+        <li><a href="#/changelog">Changelog</a></li>
+        <li><a href="#/contributing">Contributing</a></li>
+      </ul>
+    </div>
+  </aside>
+
+  <div class="body" id="docsBody">
+
+  <!-- ---------- INTRODUCTION ---------- -->
+  <div class="doc hidden" id="intro" data-title="Introduction" data-prev="" data-next="install">
+    <h1>Introduction</h1>
+    <p class="lede">A Nova select field whose options are resolved on the server, scoped to the fields it depends on.</p>
+
+    <section id="what">
+      <h2>What it does</h2>
+      <p>Declare which field this one depends on and where its options come from. When the parent changes, Nova re-resolves the field on its own sync endpoint and sends back a fresh option set — scoped, limited, and searched in the database rather than the browser.</p>
+<pre>Select::make(<span class="k">'Country'</span>, <span class="k">'country_id'</span>)-&gt;options($countries),
+
+AjaxSelect::make(<span class="k">'City'</span>, <span class="k">'city_id'</span>)
+    -&gt;parent(<span class="k">'country_id'</span>)
+    -&gt;optionsFromModel(City::class, query:
+        fn ($q, $c) =&gt; $q-&gt;where(<span class="k">'country_id'</span>, $c-&gt;parent()))
+    -&gt;labelFrom(<span class="k">'city.name'</span>),</pre>
+      <p>No route to write, no controller, no <code>{value, display}</code> mapping, and no second field to show the label on the detail page.</p>
+    </section>
+
+    <section id="when-not">
+      <h2>When not to use it</h2>
+      <p>Nova already has dependent fields. <code>dependsOn()</code> re-renders a field when another changes, and inside that callback you can call <code>options()</code> with whatever the new parent implies. If your option sets are small and already in memory — a status list, twenty categories, the regions of one country — use it, and skip this package.</p>
+      <p>This one exists for options that are too many to send, or that do not live in your database at all.</p>
+    </section>
+
+    <section id="requirements">
+      <h2>Requirements</h2>
+      <ul class="bul">
+        <li>PHP 8.3+</li>
+        <li>Laravel 12 or 13</li>
+        <li>Nova 5</li>
+      </ul>
+    </section>
+  </div>
+
+  <!-- ---------- INSTALLATION ---------- -->
+  <div class="doc hidden" id="install" data-title="Installation" data-prev="intro" data-next="configuration">
+    <h1>Installation</h1>
+    <p class="lede">Two lines. No migrations, no tables, nothing you must publish.</p>
+
+    <section id="composer">
+      <h2>Install the package</h2>
+<pre>composer require gabrielesbaiz/nova-ajax-select</pre>
+      <p>The service provider is auto-discovered and the compiled field ships with the package, so there are no assets to build or publish.</p>
+    </section>
+
+    <section id="publishing">
+      <h2>Optional publishing</h2>
+<pre>php artisan vendor:publish --tag=nova-ajax-select-config
+php artisan vendor:publish --tag=nova-ajax-select-lang</pre>
+      <p>Both are optional. The defaults work untouched; publish the config to change the cache, search or validation defaults, and the language files to change the wording or add a locale.</p>
+    </section>
+
+    <section id="first">
+      <h2>Your first field</h2>
+<pre><span class="k">use</span> Gabrielesbaiz\NovaAjaxSelect\AjaxSelect;
+
+AjaxSelect::make(<span class="k">'City'</span>, <span class="k">'city_id'</span>)
+    -&gt;parent(<span class="k">'country_id'</span>)
+    -&gt;options(fn ($c) =&gt; City::query()
+        -&gt;where(<span class="k">'country_id'</span>, $c-&gt;parent())
+        -&gt;pluck(<span class="k">'name'</span>, <span class="k">'id'</span>)),</pre>
+      <p class="note">If you already have <code>alexwenzel/ajax-select</code> installed, remove it. Both packages once registered the same asset handle, and Nova serves scripts by name with <code>-&gt;first()</code> — so one bundle was never served at all.</p>
+    </section>
+  </div>
+
+  <!-- ---------- CONFIGURATION ---------- -->
+  <div class="doc hidden" id="configuration" data-title="Configuration" data-prev="install" data-next="guide">
+    <h1>Configuration</h1>
+    <p class="lede">Defaults for fields that do not set their own, in <code>config/nova-ajax-select.php</code>.</p>
+
+    <section id="file">
+      <h2>The file</h2>
+<pre><span class="k">return</span> [
+    <span class="k">'cache'</span> =&gt; [
+        <span class="k">'enabled'</span> =&gt; <span class="k">false</span>,
+        <span class="k">'store'</span>   =&gt; <span class="k">null</span>,
+        <span class="k">'ttl'</span>     =&gt; <span class="k">300</span>,
+        <span class="k">'prefix'</span>  =&gt; <span class="k">'nova-ajax-select'</span>,
+    ],
+
+    <span class="k">'search'</span> =&gt; [
+        <span class="k">'min_length'</span> =&gt; <span class="k">0</span>,
+        <span class="k">'limit'</span>      =&gt; <span class="k">50</span>,
+        <span class="k">'debounce'</span>   =&gt; <span class="k">500</span>,
+    ],
+
+    <span class="k">'validation'</span> =&gt; [
+        <span class="k">'enabled'</span> =&gt; <span class="k">true</span>,
+    ],
+];</pre>
+    </section>
+
+    <section id="keys">
+      <h2>What each key does</h2>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Key</th><th>Default</th><th>Effect</th></tr></thead>
+          <tbody>
+            <tr><th>cache.enabled</th><td>false</td><td>Cache resolved options for fields that do not call <code>cacheFor()</code></td></tr>
+            <tr><th>cache.ttl</th><td>300</td><td>Seconds, when caching is on</td></tr>
+            <tr><th>search.min_length</th><td>0</td><td>Characters before the first search request</td></tr>
+            <tr><th>search.limit</th><td>50</td><td>Caps every option set, not only searches</td></tr>
+            <tr><th>search.debounce</th><td>500</td><td>Milliseconds between keystroke and request</td></tr>
+            <tr><th>validation.enabled</th><td>true</td><td>The production escape hatch for option validation</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="translations">
+      <h2>Translations</h2>
+      <p>English and Italian ship with the package. The field reuses Nova's own <code>Choose an option</code> and <code>No Results Found.</code> rather than duplicating them; only four keys are its own.</p>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Key</th></tr></thead>
+          <tbody>
+            <tr><th>Could not load the available options.</th></tr>
+            <tr><th>Loading options...</th></tr>
+            <tr><th>Choose a :field first</th></tr>
+            <tr><th>Type at least :count characters to search</th></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <!-- ---------- GUIDE ---------- -->
+  <div class="doc hidden" id="guide" data-title="Guide" data-prev="configuration" data-next="troubleshooting">
+    <h1>Using the field</h1>
+    <p class="lede">Everything the field does, in the order you are likely to need it.</p>
+
+    <section id="dependent">
+      <h2>A dependent field</h2>
+      <p><code>parent()</code> declares which attributes to watch. When one changes, Nova re-resolves this field on the server and sends back a fresh option set.</p>
+<pre>AjaxSelect::make(<span class="k">'City'</span>, <span class="k">'city_id'</span>)
+    -&gt;parent(<span class="k">'country_id'</span>)
+    -&gt;options(fn ($c) =&gt; City::query()
+        -&gt;where(<span class="k">'country_id'</span>, $c-&gt;parent())
+        -&gt;pluck(<span class="k">'name'</span>, <span class="k">'id'</span>)),</pre>
+      <p>There is no route to register, because the request is Nova's own field-sync request — authorized by Nova, for this resource, for this user, before your closure is ever called.</p>
+    </section>
+
+    <section id="chains">
+      <h2>Chains</h2>
+      <p>Each level emits its own change, so chains of any depth work.</p>
+<pre>Select::make(<span class="k">'Country'</span>, <span class="k">'country_id'</span>)-&gt;options($countries),
+
+AjaxSelect::make(<span class="k">'Region'</span>, <span class="k">'region_id'</span>)
+    -&gt;parent(<span class="k">'country_id'</span>)
+    -&gt;optionsFromModel(Region::class, query:
+        fn ($q, $c) =&gt; $q-&gt;where(<span class="k">'country_id'</span>, $c-&gt;parent())),
+
+AjaxSelect::make(<span class="k">'City'</span>, <span class="k">'city_id'</span>)
+    -&gt;parent(<span class="k">'region_id'</span>)
+    -&gt;optionsFromModel(City::class, query:
+        fn ($q, $c) =&gt; $q-&gt;where(<span class="k">'region_id'</span>, $c-&gt;parent())),</pre>
+      <p>Change the country and the region clears; the region clearing is what clears the city. You do not wire that up.</p>
+    </section>
+
+    <section id="multiple">
+      <h2>Several parents</h2>
+      <p>Options resolve once <b>every</b> declared parent has a value.</p>
+<pre>AjaxSelect::make(<span class="k">'Model'</span>, <span class="k">'model_id'</span>)
+    -&gt;parent(<span class="k">'brand_id'</span>, <span class="k">'year'</span>)
+    -&gt;options(fn ($c) =&gt; CarModel::query()
+        -&gt;where(<span class="k">'brand_id'</span>, $c-&gt;parent(<span class="k">'brand_id'</span>))
+        -&gt;where(<span class="k">'year'</span>, $c-&gt;parent(<span class="k">'year'</span>))
+        -&gt;pluck(<span class="k">'name'</span>, <span class="k">'id'</span>)),</pre>
+      <p>Until then it resolves nothing, which keeps an unbounded query from running the first time the form renders. <code>emptyWhenParentMissing(false)</code> turns that off.</p>
+    </section>
+
+    <section id="actions">
+      <h2>Inside actions</h2>
+      <p>Action modals are ordinary dependent-field territory in Nova 5, so the field works there unchanged. There is no model being edited: <code>$context-&gt;isAction()</code> is true and <code>$context-&gt;model()</code> returns <code>null</code>.</p>
+    </section>
+
+    <section id="composing">
+      <h2>Composing with Nova</h2>
+      <p>Because <code>parent()</code> is built on <code>dependsOn()</code> rather than beside it, everything else composes.</p>
+<pre>AjaxSelect::make(<span class="k">'City'</span>, <span class="k">'city_id'</span>)
+    -&gt;parent(<span class="k">'country_id'</span>)
+    -&gt;optionsFromModel(City::class, query:
+        fn ($q, $c) =&gt; $q-&gt;where(<span class="k">'country_id'</span>, $c-&gt;parent()))
+    -&gt;hide()
+    -&gt;dependsOn(<span class="k">'has_address'</span>, function (
+        AjaxSelect $field, NovaRequest $request, FormData $data
+    ): <span class="k">void</span> {
+        <span class="k">if</span> ($data-&gt;boolean(<span class="k">'has_address'</span>)) {
+            $field-&gt;show()-&gt;rules(<span class="k">'required'</span>);
+        }
+    }),</pre>
+      <p>Your <code>dependsOn()</code> callback runs <b>after</b> the options resolve, so it can inspect or override them.</p>
+    </section>
+
+    <section id="context">
+      <h2>The context</h2>
+      <p>An options closure receives an <code>AjaxSelectContext</code> and the current <code>NovaRequest</code>. Declare only the arguments you want — <code>fn () =&gt;</code>, <code>fn ($c) =&gt;</code> and <code>fn ($c, $r) =&gt;</code> are all valid.</p>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Member</th><th>Type</th><th>What it is</th></tr></thead>
+          <tbody>
+            <tr><th>parent()</th><td>mixed</td><td>The first declared parent's value</td></tr>
+            <tr><th>parent('country_id')</th><td>mixed</td><td>A specific parent's value</td></tr>
+            <tr><th>parents()</th><td>array</td><td>All parent values, in declaration order</td></tr>
+            <tr><th>hasAllParents()</th><td>bool</td><td>Are they all filled in?</td></tr>
+            <tr><th>value / hasValue()</th><td>mixed / bool</td><td>What is currently selected</td></tr>
+            <tr><th>search / isSearching()</th><td>?string / bool</td><td>The search term, when searching</td></tr>
+            <tr><th>limit</th><td>int</td><td>How many options to return</td></tr>
+            <tr><th>mode</th><td>string</td><td>create, update, attach, update-attached, action, index, detail</td></tr>
+            <tr><th>isAction() / isForm()</th><td>bool</td><td>Which kind of request this is</td></tr>
+            <tr><th>model()</th><td>?Model</td><td>The resource being edited — null on create and in actions</td></tr>
+            <tr><th>user()</th><td>?Authenticatable</td><td>The authenticated user</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Parent values always come from Nova's <code>FormData</code>, already restricted to the attributes this field declared. A resolver never reads raw request input.</p>
+      <p class="note"><b>Note.</b> <code>model()</code> is a method, not a property, on purpose: resolving it costs a query most closures never need. It is memoized, so asking twice is free.</p>
+    </section>
+
+    <section id="sources">
+      <h2>Option sources</h2>
+<pre>-&gt;options([<span class="k">'draft'</span> =&gt; <span class="k">'Draft'</span>, <span class="k">'live'</span> =&gt; <span class="k">'Live'</span>])
+-&gt;options(fn ($c) =&gt; $geoService-&gt;citiesByCountry($c-&gt;parent()))
+-&gt;optionsFromModel(City::class, label: <span class="k">'name'</span>, value: <span class="k">'code'</span>)
+-&gt;optionsFromRelation(<span class="k">'members'</span>)
+-&gt;optionsFromEnum(Status::class)</pre>
+      <p>Each source answers three questions cheaply, which is why validation and index rendering never drag the whole option set into memory.</p>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Source</th><th>Resolve</th><th>Membership</th><th>One label</th></tr></thead>
+          <tbody>
+            <tr><th>optionsFromModel()</th><td>one query, limited, search in SQL</td><td>whereKey()-&gt;exists()</td><td>-&gt;value($label)</td></tr>
+            <tr><th>optionsFromRelation()</th><td>one query on the relation</td><td>whereKey()-&gt;exists()</td><td>-&gt;value($label)</td></tr>
+            <tr><th>optionsFromEnum()</th><td>cases(), no I/O</td><td>tryFrom()</td><td>tryFrom()</td></tr>
+            <tr><th>options([...])</th><td>in memory</td><td>in memory</td><td>in memory</td></tr>
+            <tr><th>options(fn () =&gt; ...)</th><td>your closure, memoized</td><td>resolve, then scan</td><td>resolve, then scan</td></tr>
+            <tr><th>get('/url')</th><td>the browser fetches</td><td>cannot know</td><td>cannot — field hides</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="shapes">
+      <h2>Accepted payload shapes</h2>
+<pre>[<span class="k">'gb'</span> =&gt; <span class="k">'United Kingdom'</span>]                  <span class="c">// value =&gt; label map</span>
+[[<span class="k">'value'</span> =&gt; 1, <span class="k">'label'</span> =&gt; <span class="k">'Toronto'</span>]]          <span class="c">// Nova's own shape</span>
+[[<span class="k">'value'</span> =&gt; 1, <span class="k">'display'</span> =&gt; <span class="k">'Toronto'</span>]]        <span class="c">// the 1.x shape</span>
+[[<span class="k">'id'</span> =&gt; 1, <span class="k">'name'</span> =&gt; <span class="k">'Toronto'</span>]]              <span class="c">// an API payload</span>
+City::all()  Status::cases()                    <span class="c">// models, enums</span>
+[<span class="k">'options'</span> =&gt; [...]] / [<span class="k">'data'</span> =&gt; [...]]        <span class="c">// envelopes</span></pre>
+      <p><code>label</code> wins over <code>display</code> when both are present. Canonical numeric strings are cast to integers exactly as Nova's own <code>Select</code> does, so <code>'12'</code> and <code>12</code> compare equal against an integer foreign key.</p>
+    </section>
+
+    <section id="searching">
+      <h2>Searching</h2>
+<pre>AjaxSelect::make(<span class="k">'City'</span>, <span class="k">'city_id'</span>)
+    -&gt;optionsFromModel(City::class)
+    -&gt;searchColumns(<span class="k">'name'</span>, <span class="k">'postal_code'</span>)
+    -&gt;asyncSearchable()
+    -&gt;minSearchLength(<span class="k">2</span>)
+    -&gt;limit(<span class="k">25</span>),</pre>
+      <p>A model- or relation-backed field pushes the search into SQL across <code>searchColumns()</code>. Anything else filters in PHP after resolving — or give it <code>searchUsing()</code>, which keeps a model source's cheap membership and label lookups intact.</p>
+      <p>Until the term is long enough the field resolves nothing except the option already selected, so an edit form still shows its label. A search that happens not to include the stored value never silently clears it.</p>
+    </section>
+
+    <section id="display">
+      <h2>Index and detail</h2>
+<pre>-&gt;labelFrom(<span class="k">'city.name'</span>)                   <span class="c">// read it off the resource</span>
+-&gt;labelUsing(fn ($value, $resource) =&gt; ...) <span class="c">// resolve it yourself</span>
+-&gt;resolveLabelFromOptions()                 <span class="c">// ask the option source</span></pre>
+      <p><code>labelFrom()</code> is the one to reach for: a <code>data_get()</code> on the resource, so with the relation in your resource's <code>$with</code> it costs no extra query. <code>resolveLabelFromOptions()</code> is opt-in because it asks per value; it is memoized per request, so fifty rows over six cities cost six lookups.</p>
+      <p class="note">If the field has no way to resolve a label it <b>hides itself</b> on index and detail rather than showing a bare id. Upgrading cannot make an existing screen worse.</p>
+    </section>
+
+    <section id="validation">
+      <h2>Validation</h2>
+      <p>Submitted values are checked against the resolved options automatically. A forged <code>city_id</code> is rejected even when the id exists, because the check runs against <b>the submitted country</b>.</p>
+<pre>-&gt;withoutOptionValidation()
+-&gt;validateOptionsUsing(fn ($value, $c) =&gt; ...)
+-&gt;optionValidationMessage(<span class="k">'Pick a city in that country.'</span>)</pre>
+      <p>The rule is lazy: one <code>exists</code> query rather than materializing every option on every save. It is skipped in endpoint mode, where the option set lives in your application's route.</p>
+      <p class="note"><b>Worth knowing.</b> This stops a value that does not belong to the submitted parent. It cannot stop a <em>consistent</em> pair the user was never meant to see — scope the options query for that, as you would a Nova <code>BelongsTo</code> relatable query.</p>
+    </section>
+
+    <section id="caching">
+      <h2>Caching</h2>
+<pre>-&gt;cacheFor(<span class="k">3600</span>)
+-&gt;cacheScope(fn ($c) =&gt; tenant()-&gt;getKey())
+-&gt;cacheTags([<span class="k">'geo'</span>])
+-&gt;cacheSearchResults()
+-&gt;withoutCache()</pre>
+      <p>The key is derived from the source, the field, the parent values, the limit and the locale. Searches bypass the cache by default, because one entry per keystroke is worse than an indexed <code>LIKE</code>.</p>
+      <p class="note"><b>The cache key is not scoped to the authenticated user or tenant.</b> Scoping it that way by default would destroy the hit rate for fields that do not need it. If a field's options depend on who is asking, you must set <code>cacheScope()</code> — otherwise one tenant can be served another's options.</p>
+    </section>
+  </div>
+
+  <!-- ---------- TROUBLESHOOTING ---------- -->
+  <div class="doc hidden" id="troubleshooting" data-title="Troubleshooting" data-prev="guide" data-next="api">
+    <h1>Troubleshooting</h1>
+    <p class="lede">Symptoms, and what usually causes them.</p>
+    <section id="symptoms">
+      <h2>Common symptoms</h2>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Symptom</th><th>Cause</th></tr></thead>
+          <tbody>
+            <tr><th>Unknown component</th><td>Another package claimed the asset handle. Remove <code>alexwenzel/ajax-select</code></td></tr>
+            <tr><th>Options never load</th><td>A parent is empty. Deliberate — see <code>emptyWhenParentMissing()</code></td></tr>
+            <tr><th>Searchable field starts empty</th><td>Also deliberate. It waits for <code>minSearchLength()</code> characters</td></tr>
+            <tr><th>Missing from index or detail</th><td>No label strategy. Add <code>labelFrom()</code>, <code>labelUsing()</code> or <code>resolveLabelFromOptions()</code></td></tr>
+            <tr><th>Valid value rejected on save</th><td>The options query excludes it for the submitted parent. Check the scope</td></tr>
+            <tr><th>Stale options after a deploy</th><td>A <code>cacheFor()</code> entry. <code>cacheTags()</code> makes it flushable</td></tr>
+            <tr><th>One tenant sees another's options</th><td><code>cacheFor()</code> without <code>cacheScope()</code></td></tr>
+            <tr><th>Selection clears while typing</th><td>Only when the server no longer offers the value; a search that merely excludes it does not clear it</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <!-- ---------- API ---------- -->
+  <div class="doc hidden" id="api" data-title="API reference" data-prev="troubleshooting" data-next="security">
+    <h1>API reference</h1>
+    <p class="lede">Every fluent method. Everything inherited from Nova's <code>Select</code> works as usual.</p>
+
+    <section id="api-dependency">
+      <h2>Dependency</h2>
+      <div class="tablewrap"><table><tbody>
+        <tr><th>parent(Field|string ...$attributes)</th><td>Watch one or more parent attributes</td></tr>
+        <tr><th>parents(array $attributes)</th><td>The same, from an array</td></tr>
+        <tr><th>clearWhenParentChanges(bool = true)</th><td>Clear a value that is no longer valid. Default true</td></tr>
+        <tr><th>emptyWhenParentMissing(bool = true)</th><td>Resolve nothing while a parent is empty. Default true</td></tr>
+      </tbody></table></div>
+    </section>
+
+    <section id="api-options">
+      <h2>Options</h2>
+      <div class="tablewrap"><table><tbody>
+        <tr><th>options(iterable|callable|string)</th><td>A map, a closure or an enum class-string</td></tr>
+        <tr><th>optionsFromModel($model, $label, $value, $query)</th><td>An Eloquent model</td></tr>
+        <tr><th>optionsFromRelation($relation, $label, $query)</th><td>A relation on the edited model</td></tr>
+        <tr><th>optionsFromEnum($enum, $label, $filter)</th><td>A backed enum</td></tr>
+        <tr><th>searchColumns(string ...$columns)</th><td>Columns a database source searches</td></tr>
+      </tbody></table></div>
+    </section>
+
+    <section id="api-search">
+      <h2>Search</h2>
+      <div class="tablewrap"><table><tbody>
+        <tr><th>asyncSearchable(callable|bool = true)</th><td>Load options as the user types</td></tr>
+        <tr><th>searchUsing(Closure $callback)</th><td><code>($search, $context)</code> — implies asyncSearchable()</td></tr>
+        <tr><th>minSearchLength(int)</th><td>Characters before the first request</td></tr>
+        <tr><th>limit(int)</th><td>Maximum options returned</td></tr>
+        <tr><th>debounce(int)</th><td>Nova's own; default 500ms</td></tr>
+      </tbody></table></div>
+    </section>
+
+    <section id="api-display">
+      <h2>Display</h2>
+      <div class="tablewrap"><table><tbody>
+        <tr><th>labelFrom(string $path)</th><td><code>data_get()</code> path on the resource</td></tr>
+        <tr><th>labelUsing(Closure)</th><td><code>($value, $resource, $request)</code></td></tr>
+        <tr><th>resolveLabelFromOptions(bool = true)</th><td>Ask the option source, memoized</td></tr>
+        <tr><th>displayUsingLabels()</th><td>Alias of resolveLabelFromOptions()</td></tr>
+      </tbody></table></div>
+    </section>
+
+    <section id="api-validation">
+      <h2>Validation</h2>
+      <div class="tablewrap"><table><tbody>
+        <tr><th>validateOptions(callable|bool = true)</th><td>Turn the check on or off</td></tr>
+        <tr><th>withoutOptionValidation()</th><td>Turn it off</td></tr>
+        <tr><th>validateOptionsUsing(Closure)</th><td><code>($value, $context): bool</code></td></tr>
+        <tr><th>optionValidationMessage(string|Closure)</th><td>Custom failure message</td></tr>
+      </tbody></table></div>
+    </section>
+
+    <section id="api-caching">
+      <h2>Caching</h2>
+      <div class="tablewrap"><table><tbody>
+        <tr><th>cacheFor($ttl, ?string $store = null)</th><td>Cache resolved options</td></tr>
+        <tr><th>cacheScope(Closure|array)</th><td>Add tenant or user to the key</td></tr>
+        <tr><th>cacheTags(array)</th><td>Tag the entries</td></tr>
+        <tr><th>cacheSearchResults(bool = true)</th><td>Cache searches too. Default false</td></tr>
+        <tr><th>withoutCache()</th><td>Never cache this field</td></tr>
+      </tbody></table></div>
+    </section>
+
+    <section id="api-legacy">
+      <h2>Legacy</h2>
+      <div class="tablewrap"><table><tbody>
+        <tr><th>get(string $endpoint)</th><td><b>Deprecated.</b> The 1.x URL mode</td></tr>
+        <tr><th>endpoint(string $url, ?Closure $transform)</th><td>The same, non-deprecated spelling</td></tr>
+        <tr><th>usesEndpoint() / endpointUrl()</th><td>Inspect it</td></tr>
+      </tbody></table></div>
+    </section>
+  </div>
+
+  <!-- ---------- SECURITY ---------- -->
+  <div class="doc hidden" id="security" data-title="Security model" data-prev="api" data-next="upgrade">
+    <h1>Security model</h1>
+    <p class="lede">What the package defends, and what is deliberately left to you.</p>
+
+    <section id="no-routes">
+      <h2>It owns no routes</h2>
+      <p>Grep <code>src/</code> for <code>Route::</code> and you find nothing. Every resolution happens inside Nova's own field-sync endpoints, so Nova's form request authorizes the resource and the mode, rebuilds the resource and locates the field <em>before</em> an application closure is invoked. A package-owned endpoint would have to re-implement resource resolution and authorization by hand, which is where field packages tend to grow vulnerabilities.</p>
+    </section>
+
+    <section id="defends">
+      <h2>What it defends</h2>
+      <ul class="bul">
+        <li><b>Resolver input cannot be steered.</b> Parent values come from <code>FormData</code>, restricted to the declared attributes.</li>
+        <li><b>Forged selections.</b> A submitted value is checked against the options the field would offer for the parents submitted with it — one membership query, not a materialized <code>Rule::in</code>.</li>
+        <li><b>Search terms are bound</b>, and <code>%</code> and <code>_</code> are escaped so a user cannot widen their own query to the whole table.</li>
+        <li><b>Unbounded result sets</b> are capped by <code>limit()</code>.</li>
+      </ul>
+    </section>
+
+    <section id="deliberate">
+      <h2>Deliberate, not oversights</h2>
+      <p class="note"><b>The options cache is not scoped to the user or tenant by default.</b> Scoping every entry by user would destroy the hit rate for fields whose options are global. If a field's options depend on the tenant or the viewer, set <code>cacheScope()</code>. This is the one foot-gun in the package.</p>
+      <p><b>Column names are code, not request data.</b> <code>searchColumns()</code>, the label and value arguments, the relation name and the <code>labelFrom()</code> path are interpolated. They come from your resource definition; deriving one from a request is an injection this package does not defend against.</p>
+      <p><b>Endpoint mode validates nothing, on purpose.</b> With <code>get('/url')</code> the option set lives in your route, so the field cannot know it. Validation is skipped rather than guessed.</p>
+    </section>
+
+    <section id="reporting">
+      <h2>Reporting</h2>
+      <p>Email <code>gabriele.sbaiz@noviasnet.it</code> with a description, the version and a reproduction. Please do not open a public issue. Acknowledgement within 5 working days, assessment within 15.</p>
+    </section>
+  </div>
+
+  <!-- ---------- UPGRADE ---------- -->
+  <div class="doc hidden" id="upgrade" data-title="Upgrading from 1.x" data-prev="security" data-next="changelog">
+    <h1>Upgrading from 1.x</h1>
+    <p class="lede">Nothing is required. Everything below is optional cleanup.</p>
+
+    <section id="nothing">
+      <h2>Nothing is required</h2>
+      <p><code>get()</code> and <code>parent()</code> keep working, the <code>NovaAjaxSelect</code> class and <code>NovaAjaxSelectServiceProvider</code> still resolve, and a legacy endpoint may keep returning <code>{value, display}</code>. Existing call sites also gain debounced and cancellable requests, a loading state, error reporting, and — because <code>parent()</code> now rides Nova's dependency machinery — working <code>dependsOn()</code>, <code>hide()</code>, <code>show()</code> and action-modal support.</p>
+    </section>
+
+    <section id="remove-upstream">
+      <h2>1. Remove alexwenzel/ajax-select</h2>
+      <p>Both packages registered <code>Nova::script('ajax-select', ...)</code>. Nova resolves scripts by name with <code>-&gt;first()</code>, so with both installed one bundle was never served and its field rendered as an unknown component. 2.0 uses a namespaced handle, but there is no reason to keep both.</p>
+    </section>
+
+    <section id="delete-routes">
+      <h2>2. Delete the routes</h2>
+<pre><span class="c">// before — plus a route in every tenant's routes file</span>
+AjaxSelect::make(<span class="k">'City'</span>, <span class="k">'city_id'</span>)
+    -&gt;get(<span class="k">'/api/cities/country/{country_id}'</span>)
+    -&gt;parent(<span class="k">'country_id'</span>)
+
+<span class="c">// after</span>
+AjaxSelect::make(<span class="k">'City'</span>, <span class="k">'city_id'</span>)
+    -&gt;parent(<span class="k">'country_id'</span>)
+    -&gt;optionsFromModel(City::class, query:
+        fn ($q, $c) =&gt; $q-&gt;where(<span class="k">'country_id'</span>, $c-&gt;parent()))
+    -&gt;cacheFor(<span class="k">3600</span>)</pre>
+      <p>If the options come from a service rather than a model, the closure form takes the route body verbatim.</p>
+    </section>
+
+    <section id="delete-shadow">
+      <h2>3. Delete the shadow detail fields</h2>
+<pre><span class="c">// before</span>
+AjaxSelect::make(<span class="k">'City'</span>, <span class="k">'city_id'</span>)
+    -&gt;get(...)-&gt;parent(...)-&gt;onlyOnForms(),
+Text::make(<span class="k">'City'</span>, <span class="k">'city_id'</span>, fn () =&gt; $city?-&gt;name)-&gt;onlyOnDetail(),
+
+<span class="c">// after</span>
+AjaxSelect::make(<span class="k">'City'</span>, <span class="k">'city_id'</span>)
+    -&gt;parent(...)
+    -&gt;optionsFromModel(...)
+    -&gt;labelFrom(<span class="k">'city.name'</span>),</pre>
+    </section>
+
+    <section id="drop-cansee">
+      <h2>4. Drop the canSee() workarounds</h2>
+      <p>Any branch that exists only because <code>dependsOn()</code> did not fire on this field — typically <code>if ($field instanceof AjaxSelect) return $field-&gt;canSee(...)</code> — can go back to being an ordinary <code>hide()-&gt;dependsOn(...)</code>.</p>
+    </section>
+
+    <section id="breaking">
+      <h2>Breaking changes</h2>
+      <ul class="bul">
+        <li>PHP 8.3+, Laravel 12 or 13, Nova 5. <code>laravel/nova</code> is now a real dependency rather than a dev one.</li>
+        <li>The asset handle and the Vue component names are namespaced.</li>
+        <li><code>showOnIndex</code> / <code>showOnDetail</code> are no longer hardcoded false — the field still hides itself when it cannot resolve a label, so no existing screen changes.</li>
+        <li>Option validation is on by default, except in endpoint mode.</li>
+        <li><code>spatie/laravel-package-tools</code> is no longer a dependency.</li>
+      </ul>
+      <p>Deprecated and removed in 3.0: <code>get()</code> and endpoint mode, the <code>NovaAjaxSelect</code> and <code>NovaAjaxSelectServiceProvider</code> class names, and the <code>{value, display}</code> payload shape.</p>
+    </section>
+  </div>
+
+  <!-- ---------- CHANGELOG ---------- -->
+  <div class="doc hidden" id="changelog" data-title="Changelog" data-prev="upgrade" data-next="contributing">
+    <h1>Changelog</h1>
+    <p class="lede">What changed, and when.</p>
+
+    <section id="v2">
+      <h2>2.0.0</h2>
+      <h3>Fixed</h3>
+      <ul class="bul">
+        <li>The script handle no longer collides with <code>alexwenzel/ajax-select</code>. Both registered <code>Nova::script('ajax-select', ...)</code>; Nova resolves by name with <code>-&gt;first()</code>, so with both installed one bundle was never served.</li>
+        <li>The searchable branch of the form field was dead code: the template had been copied from Nova's <code>SelectField.vue</code> without the script that backs it.</li>
+      </ul>
+      <h3>Added</h3>
+      <ul class="bul">
+        <li>Server-side option resolution: <code>options()</code>, <code>optionsFromModel()</code>, <code>optionsFromRelation()</code>, <code>optionsFromEnum()</code>, <code>searchUsing()</code>.</li>
+        <li>Server-side search: <code>asyncSearchable()</code>, <code>minSearchLength()</code>, <code>limit()</code>.</li>
+        <li>Index and detail labels: <code>labelFrom()</code>, <code>labelUsing()</code>, <code>resolveLabelFromOptions()</code>.</li>
+        <li>Automatic validation of submitted values, with opt-outs.</li>
+        <li>Caching: <code>cacheFor()</code>, <code>cacheScope()</code>, <code>cacheTags()</code>, <code>cacheSearchResults()</code>, <code>withoutCache()</code>.</li>
+        <li>Multiple parents, <code>clearWhenParentChanges()</code>, <code>emptyWhenParentMissing()</code>.</li>
+        <li>A configuration file, English and Italian translations, and a real test suite.</li>
+      </ul>
+      <h3>Changed</h3>
+      <ul class="bul">
+        <li><code>parent()</code> is implemented on Nova's dependent-field machinery instead of walking the Vue component tree, so the field composes with <code>dependsOn()</code>, <code>hide()</code>, <code>show()</code> and <code>readonly()</code> and works in panels, pivot forms and action modals.</li>
+        <li>Requests are debounced and cancellable, with a loading state and error reporting.</li>
+        <li>The build moved from Laravel Mix to Vite.</li>
+        <li>Requires PHP 8.3+, Laravel 12 or 13 and Nova 5.</li>
+      </ul>
+    </section>
+
+    <section id="v1">
+      <h2>1.0.0</h2>
+      <p>Initial release, based on <code>alexwenzel/nova-ajax-select</code>.</p>
+    </section>
+  </div>
+
+  <!-- ---------- CONTRIBUTING ---------- -->
+  <div class="doc hidden" id="contributing" data-title="Contributing" data-prev="changelog" data-next="">
+    <h1>Contributing</h1>
+    <p class="lede">The gates, and the two rules that matter most.</p>
+
+    <section id="setup">
+      <h2>Getting set up</h2>
+      <p>Nova is a paid, private Composer package, so you will need a licence.</p>
+<pre>composer config --global http-basic.nova.laravel.com \
+    "you@example.com" "your-licence-key"
+composer install
+npm ci &amp;&amp; npm run build</pre>
+<pre>composer test      <span class="c"># Pest</span>
+composer format    <span class="c"># Pint</span>
+npm test           <span class="c"># Vitest</span>
+npm run build      <span class="c"># compile dist/</span></pre>
+      <p>There is no CI. Those four commands are the whole gate, so please run all of them.</p>
+    </section>
+
+    <section id="rules">
+      <h2>Ground rules</h2>
+      <ul class="bul">
+        <li><b>Every README example is a test.</b> <code>tests/ReadmeExamplesTest.php</code> executes the code samples in the documentation. Change a documented API and that file goes red first.</li>
+        <li><b>Do not add a route.</b> Every option resolution rides Nova's own field-sync request, which means Nova has already authorized the resource, the mode and the user. If you think you need an endpoint, the answer is almost certainly a new <code>OptionSource</code>.</li>
+        <li><b>Do not walk the Vue component tree.</b> Parent changes arrive on Nova's field event bus through <code>getFieldAttributeChangeEventName()</code>. Build the event name with that helper, never by hand.</li>
+        <li><b>Every Nova import goes through <code>resources/js/nova.js</code></b>, the single seam over Nova's internals.</li>
+      </ul>
+    </section>
+
+    <section id="dist">
+      <h2>dist/ is committed</h2>
+      <p>A Nova field is unusable without its compiled bundle, and with no CI to build one on release the repository carries it. The build is deterministic, so rebuild and check for drift before tagging.</p>
+<pre>npm ci &amp;&amp; npm run build &amp;&amp; git diff --exit-code -- dist</pre>
+      <p>1.x shipped a <code>FormField.vue</code> whose template had been replaced but whose script had not, so its searchable branch referenced methods that did not exist.</p>
+    </section>
+  </div>
+
+  </div>
+
+  <aside class="onthispage" aria-label="On this page">
+    <h4>On this page</h4>
+    <ol id="toc"></ol>
+  </aside>
+</div>
+
+</main>
+
+<footer class="sitefoot">
+  <div class="mx">
+    <div class="cols">
+      <div><h4>Package</h4><ul>
+        <li><a href="#/home">Overview</a></li>
+        <li><a href="#/changelog">Changelog</a></li>
+        <li><a href="#/contributing">Contributing</a></li>
+      </ul></div>
+      <div><h4>Documentation</h4><ul>
+        <li><a href="#/intro">Introduction</a></li>
+        <li><a href="#/install">Installation</a></li>
+        <li><a href="#/configuration">Configuration</a></li>
+        <li><a href="#/troubleshooting">Troubleshooting</a></li>
+      </ul></div>
+      <div><h4>Reference</h4><ul>
+        <li><a href="#/guide">Guide</a></li>
+        <li><a href="#/api">API reference</a></li>
+        <li><a href="#/upgrade">Upgrading from 1.x</a></li>
+      </ul></div>
+      <div><h4>Project</h4><ul>
+        <li><a href="#/security">Security model</a></li>
+        <li><a href="https://github.com/sponsors/gabrielesbaiz">Sponsor</a></li>
+      </ul></div>
+    </div>
+    <div class="base">
+      <span>MIT licensed &middot; Built by Gabriele Sbaiz</span>
+      <span>Requires a Laravel Nova licence, sold separately</span>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
