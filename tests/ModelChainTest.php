@@ -7,7 +7,7 @@ use Gabrielesbaiz\NovaAjaxSelect\Tests\Fixtures\Models\City;
 use Gabrielesbaiz\NovaAjaxSelect\Tests\Fixtures\Models\Region;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
-function readmeRequest(array $input = []): NovaRequest
+function chainRequest(array $input = []): NovaRequest
 {
     $request = NovaRequest::create('/nova-api/customers/creation-fields', 'PATCH', array_merge($input, [
         'editing' => 'true',
@@ -27,8 +27,8 @@ beforeEach(function (): void {
     City::create(['region_id' => 2, 'name' => 'Tokyo']);
 });
 
-it('runs the headline example', function (): void {
-    readmeRequest(['country' => 'ca']);
+it('resolves a two level chain from scoped model sources', function (): void {
+    chainRequest(['country' => 'ca']);
 
     $region = AjaxSelect::make('Region', 'region_id')
         ->parent('country')
@@ -36,7 +36,7 @@ it('runs the headline example', function (): void {
 
     expect(collect($region->jsonSerialize()['options'])->pluck('label')->all())->toBe(['Ontario']);
 
-    readmeRequest(['region_id' => 1]);
+    chainRequest(['region_id' => 1]);
 
     $city = AjaxSelect::make('City', 'city_id')
         ->parent('region_id')

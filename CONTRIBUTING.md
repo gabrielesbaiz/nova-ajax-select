@@ -24,10 +24,9 @@ them — nothing downstream will catch it for you.
 
 ## Ground rules
 
-**Every README example is a test.** `tests/ReadmeExamplesTest.php` executes the
-code samples on the documentation page. If you change an API the README shows,
-that file goes red before anything else does, and updating it is part of the
-change rather than a follow-up.
+**The README carries no code.** It is a front door: what the package does, what
+it costs to run, and a link. Every example lives on the documentation site, so
+an API change is a change to `docs/`, not to the README.
 
 **Do not add a route.** This package deliberately owns no HTTP endpoint: every
 option resolution rides Nova's own field-sync request, which means Nova has
@@ -133,7 +132,7 @@ shorten either name.
 2. Keep the gates green: Pest, Pint, Vitest, and a clean `dist/` diff.
 3. Describe the behaviour change, not just the diff.
 4. Update `CHANGELOG.md`.
-5. If you changed a documented API, update `README.md` — and its test.
+5. If you changed a documented API, update the site in `docs/`.
 
 Security issues go to the address in [SECURITY.md](SECURITY.md), not to a public
 pull request.
