@@ -1,8 +1,8 @@
 <p align="center">
-    <img src="art/nova-ajax-select-logo.png" alt="Nova Ajax Select" width="600">
+    <img src="art/nova-ajax-select-logo.png" alt="NovaAjax Select" width="600">
 </p>
 
-# Nova Ajax Select
+# NovaAjax Select
 
 A Laravel Nova select field whose options are resolved on the server — scoped to whatever the user picked a moment ago, searched in the database rather than the browser, and validated on the way back in.
 

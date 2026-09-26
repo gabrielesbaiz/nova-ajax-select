@@ -39,7 +39,7 @@
   const toc = document.getElementById('toc');
   const rail = toc.closest('.onthispage');
 
-  const titleOf = id => docs.find(d => d.id === id)?.dataset.title || 'Nova Ajax Select';
+  const titleOf = id => docs.find(d => d.id === id)?.dataset.title || 'NovaAjax Select';
 
   /* Rebuilt on every route change, so the rail always describes the page
      actually on screen. The palette reads the same array. */
@@ -102,7 +102,7 @@
     sideLinks.forEach(a => a.setAttribute('aria-current', a.getAttribute('href') === '#/' + id ? 'page' : 'false'));
     navLinks.forEach(a => a.setAttribute('aria-current', String(a.getAttribute('href') === '#/' + id)));
 
-    document.title = doc ? titleOf(id) + ' — Nova Ajax Select' : 'Nova Ajax Select';
+    document.title = doc ? titleOf(id) + ' — NovaAjax Select' : 'NovaAjax Select';
 
     if (doc) {
       buildPager(doc);
